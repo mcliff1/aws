@@ -6,7 +6,7 @@ const path = require('path')
 const crypto = require('crypto')
 AWS.config.setPromisesDependency(Promise)
 
-const tableName = ${process.env.DDB_TABLE}
+const tableName = process.env.DDB_TABLE
 const docClient = new AWS.DynamoDB.DocumentClient()
 
 function RenderPage (link, submitted) {
@@ -27,7 +27,7 @@ module.exports.handler = (event, context, callback) => {
   console.log(JSON.stringify(event))
 
   const submitted = querystring.parse(event.body).link
-  const prefix = event.headers.Referer || 'http://mysite.com/'
+  const prefix = event.headers.Referer || 'http://TODO_DEFAULT_FROM_CONFIG.com/'
 
   console.log('URL submitted: ' + submitted)
   return new Promise((resolve, reject) => {
@@ -57,7 +57,7 @@ module.exports.handler = (event, context, callback) => {
       null,
       {
         statusCode: 200,
-        body: RenderPage(path.join(prefix, slug).replace(':/', '://'), prefix),
+        body: RenderPage(path.join(prefix, slug).replace(':/', '://'), submitted),
         headers: {'Content-Type': 'text/html'}
       }
     )

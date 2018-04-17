@@ -2,13 +2,14 @@
 
 const base_page = `<html>
 <body>
-<h1>Hi</h1>
+<h1>URL Shortener</h1>
+<p>Enter a link in the field below, and a short link will be generated for future use</p>
   <form method="POST" action="">
     <label for="uri">Link:</label>
     <input type="text" id="link" name="link" size="40" autofocus />
     <br />
     <br />
-    <input type="submit" value="Shorten it!" />
+    <input type="submit" value="Shorten It" />
   </form>
 </body>
 </html>`
