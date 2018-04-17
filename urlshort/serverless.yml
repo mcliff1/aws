@@ -68,9 +68,11 @@ resources:
             KeyType: HASH
         ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
 
-    CustomDomainMap:
-      Type: "AWS::ApiGateway::BasePathMapping"
-      Properties:
-          DomainName: ${self:custom.extra.Domain}
-          Stage: ${self:custom.stage}
-          RestApiId: {Ref: ApiGatewayRestApi}
+# note working 4/17/18 - https://forums.aws.amazon.com/message.jspa?messageID=769627
+#    PathMapping:
+#      Type: "AWS::ApiGateway::BasePathMapping"
+#      Properties:
+#          #DomainName: ${self:custom.extra.Domain}
+#          DomainName: qa.mattcliff.net
+#          Stage: ${self:custom.stage}
+#          RestApiId: {Ref: ApiGatewayRestApi}
