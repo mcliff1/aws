@@ -1,0 +1,158 @@
+service: linklist
+
+frameworkVersion: ">=1.9.0 <2.0.0"
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  rootDomain: mattcliff.net
+  devDomains:
+    - dev-linklist.mattcliff.net
+  prodDomains:
+    - www-linklist.mattcliff.net
+    - linklist.mattcliff.net
+  devCognitoPool: 'arn:aws:cognito-idp:us-east-1:tbd'
+  prodCognitoPool: 'arn:aws:cognito-idp:us-east-1:tbd'
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs6.10
+  environment:
+    ARTICLES_TABLE: {Ref: ArticlesDB}
+    COMMENTS_TABLE: {Ref: CommentsDB}
+  iamRoleStatements:
+    - Effect: Allow
+      Resource:
+        - "Fn::Join":
+            - ""
+            -
+              - "arn:aws:dynamodb:"
+              - {Ref: "AWS::Region"}
+              - ":"
+              - {Ref: "AWS::AccountId"}
+              - ":table/"
+              - Ref: CommentsDB
+        - "Fn::Join":
+            - ""
+            -
+              - "arn:aws:dynamodb:"
+              - {Ref: "AWS::Region"}
+              - ":"
+              - {Ref: "AWS::AccountId"}
+              - ":table/"
+              - Ref: CommentsDB
+              - '/index/*'
+        - "Fn::Join":
+            - ""
+            -
+              - "arn:aws:dynamodb:"
+              - {Ref: "AWS::Region"}
+              - ":"
+              - {Ref: "AWS::AccountId"}
+              - ":table/"
+              - Ref: ArticlesDB
+        - "Fn::Join":
+            - ""
+            -
+              - "arn:aws:dynamodb:"
+              - {Ref: "AWS::Region"}
+              - ":"
+              - {Ref: "AWS::AccountId"}
+              - ":table/"
+              - Ref: ArticlesDB
+              - '/index/*'
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:Scan
+        - dynamodb:Query
+
+
+
+functions:
+  presign:
+    handler: backend/pre_signup.handler
+  test:
+    handler: backend/test_auth.handler
+    events:
+    - http:
+        cors: true
+        authorizer:
+          name: pool_auth
+          arn: '${self:custom.${self:custom.stage}CognitoPool}'
+        path: /test
+        method: get
+  gql:
+    handler: backend/gql_endpoint.handler
+    events:
+    - http:
+        cors: true
+        authorizer:
+          name: pool_auth
+          arn: '${self:custom.${self:custom.stage}CognitoPool}'
+        path: /gql
+        method: post
+    - http:
+        cors: true
+        path: /readgql
+        method: post
+
+resources:
+  Mappings: ${file(resources/mappings.yml)}
+  Outputs: ${file(resources/outputs.yml)}
+  Resources:
+    WebSite:
+      Type: "AWS::S3::Bucket"
+      Properties:
+        WebsiteConfiguration:
+          ErrorDocument: index.html
+          IndexDocument: index.html
+    ArticlesDB: ${file(resources/article-db.yml)}
+    CommentsDB: ${file(resources/comment-db.yml)}
+    DnsRecords: ${file(resources/${self:custom.stage}-dns.yml)}
+    SSLCert: ${file(resources/${self:custom.stage}-ssl.yml)}
+    CDN:
+      Type: "AWS::CloudFront::Distribution"
+      Properties:
+        DistributionConfig:
+          ViewerCertificate:
+            AcmCertificateArn: {Ref: SSLCert}
+            SslSupportMethod: sni-only
+          Enabled: true
+          HttpVersion: http2
+          Aliases: ${self:custom.${self:custom.stage}Domains}
+          DefaultRootObject: index.html
+          Origins:
+            - DomainName: { "Fn::Join": 
+                            ["", [{Ref: WebSite}, ".", {"Fn::FindInMap": [RegionMap, {Ref: "AWS::Region"}, websiteendpoint]}]]}
+              Id: S3Origin
+              CustomOriginConfig:
+                HTTPPort: 80
+                HTTPSPort: 443
+                OriginProtocolPolicy: http-only
+          DefaultCacheBehavior:
+            ViewerProtocolPolicy: allow-all
+            TargetOriginId: S3Origin
+            AllowedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            DefaultTTL: 30
+            MinTTL: 10
+            ForwardedValues:
+              QueryString: true
+
+package:
+  exclude:
+    - bin/**
+    - static/**
+    - resources/**
+    - package.json
+    - node_modules/**
+  include:
+    - node_modules/uuid/**
+    - node_modules/loadash/**
+    - node_modules/graphql/**
+    - node_modules/iterall/**

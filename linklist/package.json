@@ -1,0 +1,24 @@
+{
+  "name": "linklist",
+  "version": "1.0.0",
+  "description": "A serverless site with authentication, and commented links",
+  "main": "",
+  "scripts": {
+    "test": "echo \"Error: no test here sorry\" && exit 1",
+    "lint": "standard",
+    "fixStyle": "standard --fix",
+    "staticDownload": "./bin/download_vendor_libs.sh",
+    "staticDeploy": "./bin/deploy_static.sh",
+    "staticDestroy": "./bin/delete_static.sh && echo \"Now you can run 'sls remove' on the stage\""
+  },
+  "author": "Ryan Scott Brown (and Matt Cliff)",
+  "dependencies": {
+    "graphql": "~0.9.1",
+    "lodash": "~4.16.4",
+    "uuid": "~3.0.1"
+  },
+  "devDependencies": {
+    "standard": "*"
+  },
+  "license": "MIT"
+}

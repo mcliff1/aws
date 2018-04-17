@@ -1,0 +1,36 @@
+service: staticweb
+#  designed to be a 'simple' serverless site with managed content
+#  must run in us-east-1 for CDN and custom domain name/certs
+
+frameworkVersion: ">=1.9.0 <2.0.0"
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  rootDomain: mattcliff.net
+  devDomains:
+    - qa.mattcliff.net
+  prodDomains:
+    - www.mattcliff.net
+    - mattcliff.net
+  devCognitoPool: 'arn:aws:cognito-idp:us-east-1:tbd'
+  prodCognitoPool: 'arn:tbd'
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs6.10
+
+functions:
+
+resources:
+  Mappings: ${file(resources/mappings.yml)}
+  #Outputs: ${file(resources/outputs.yml)}
+  Resources:
+    WebSite:
+      Type: "AWS::S3::Bucket"
+      Properties:
+        WebsiteConfiguration:
+          ErrorDocument: index.html
+          IndexDocument: index.html
+    #DnsRecords: ${file(resources/${self:custom.stage}-dns.yml)}
+    #SSLCert: ${file(resources/${self:custom.stage}-ssl.yml)}

@@ -1,0 +1,6 @@
+Type: "AWS::CertificateManager::Certificate"
+Properties:
+  DomainName: linklist.${self:custom.rootDomain}
+  SubjectAlternativeNames:
+    - "www-linklist.${self:custom.rootDomain}"
+
