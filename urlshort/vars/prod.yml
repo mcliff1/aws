@@ -1,0 +1,4 @@
+Domain: prod.mattcliff.net
+DynamoCapacity:
+  ReadCapacityUnits: 2
+  WriteCapacityUnits: 2

@@ -1,0 +1,4 @@
+Domain: qa.mattcliff.net
+DynamoCapacity:
+  ReadCapacityUnits: 1
+  WriteCapacityUnits: 1

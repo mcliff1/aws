@@ -1,0 +1,38 @@
+service: simpleservice
+# this tool is a simple debugging tool that can be used
+# logs the GET and POST to the logger for now and that's it
+frameworkVersion: ">=1.1.0 < 2.0.0"
+
+# used for readability
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
+  
+
+provider:
+  name: aws
+  runtime: python3.6
+  region: us-west-2
+
+functions:
+  simple:
+    handler: handler.handle_service
+    tags:
+      created: simpleservice debugging tool
+
+    # create some API gateway endpoints
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+      - http:
+          path: /
+          method: post
+          cors: true
+
+
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
