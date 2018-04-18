@@ -21,7 +21,6 @@ provider:
     - Action:
         - dynamodb:GetItem
         - dynamodb:PutItem
-      #Resource: "arn:aws:dynamodb:${self:custom.region}:220065781146:table/${self:custom.stage}-shortened-urls"
       Resource: 
         "Fn::Join":
           - ""
@@ -68,11 +67,17 @@ resources:
             KeyType: HASH
         ProvisionedThroughput: ${self:custom.extra.DynamoCapacity}
 
-# note working 4/17/18 - https://forums.aws.amazon.com/message.jspa?messageID=769627
-#    PathMapping:
-#      Type: "AWS::ApiGateway::BasePathMapping"
-#      Properties:
-#          #DomainName: ${self:custom.extra.Domain}
-#          DomainName: qa.mattcliff.net
-#          Stage: ${self:custom.stage}
-#          RestApiId: {Ref: ApiGatewayRestApi}
+    CustomArnCert:
+      Type: "AWS::CertificateManager::Certificate"
+      Properties:
+          DomainName: ${self:custom.extra.Domain}
+          #DomainName: url-dev.mattcliff.net
+
+
+    CustomDN: 
+      Type: "AWS::ApiGateway::DomainName"
+      Properties:
+          DomainName: ${self:custom.extra.Domain}
+          #DomainName: url-dev.mattcliff.net
+          CertificateArn: {Ref: CustomArnCert}
+

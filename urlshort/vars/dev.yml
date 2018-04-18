@@ -1,4 +1,4 @@
-Domain: qa.mattcliff.net
+Domain: url-dev.mattcliff.net
 DynamoCapacity:
   ReadCapacityUnits: 1
   WriteCapacityUnits: 1
