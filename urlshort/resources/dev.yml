@@ -1,4 +1,4 @@
-Domain: url-dev.mattcliff.net
+RootDomain: mattcliff.net
 DynamoCapacity:
   ReadCapacityUnits: 1
   WriteCapacityUnits: 1
