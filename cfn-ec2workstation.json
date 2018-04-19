@@ -1,10 +1,20 @@
 { "AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "Template will build SLS workstation",
   "Parameters" :
 {
     "myKeyPair" : {
 	"Description" : "Amazon EC2 Key Pair",
 	"Type" : "AWS::EC2::KeyPair::KeyName"
+    },
+    "myDomain" : {
+	"Description" : "Domain to add the sls-${region}",
+	"Type" : "String",
+	"Default" : "nodomainname"
     }
+},
+  "Conditions" :
+{
+	"CreateDnsResources" : {"Fn::Not" : [{ "Fn::Equals" : [{"Ref" : "myDomain"}, "nodomainname"] }] } 
 },
   "Resources" :
 {
@@ -17,17 +27,37 @@
                 "Tags" : [ { "Key" : "Role", "Value" : "SLS Workstation" } ],
                 "UserData" : { "Fn::Base64" : { "Fn::Join" : ["",[
                         "#!/bin/bash", "\n",
+                        "yum update -y", "\n",
                         "yum install -y git docker tmux jq", "\n",
                         "curl https://bootstrap.pypa.io/get-pip.py | /usr/bin/python2.7", "\n",
                         "curl https://rpm.nodesource.com/setup_8.x | bash -", "\n",
                         "yum install -y nodejs", "\n",
                         "npm install -g serverless", "\n",
                         "npm install -g yarn", "\n",
+                        "npm install -g create-react-app", "\n",
                         "pip install -q pylint", "\n",
                         "date > bootstrap.log", "\n"]]}
                 }
         }
+    },
+
+
+    "DnsRecord": {
+        "Type" : "AWS::Route53::RecordSet",
+	"Condition" : "CreateDnsResources",
+        "Properties" : {
+		"Comment" : "ec2-sls  workstation nstance",
+		"Type" : "A",
+		"TTL" : "900",
+		"HostedZoneName" : {"Fn::Join": [ "", [{"Ref": "myDomain"}, "." ]]},
+		"Name" : {"Fn::Join": [ "", ["sls", "-", {"Ref": "AWS::Region"}, ".", {"Ref":"myDomain"}, "."]]},
+		"ResourceRecords" : [
+			{ "Fn::GetAtt" : ["EC2Instance", "PublicIp"] }
+		]
+	}
+
      }
+
 },
   "Mappings" :
 {
@@ -54,6 +84,5 @@
 }
 
 }
-
 
 
