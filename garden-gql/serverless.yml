@@ -1,0 +1,26 @@
+service: garden-gql
+provider:
+    name: aws
+    runtime: nodejs4.3
+    region: us-west-2
+
+    iamRoleStatements:
+       -  Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: "arn:aws:dynamodb:us-west-2:*:*"
+
+functions:
+    graphQl:
+        handler: index.graphql
+        events:
+            - http:
+                path: graphql
+                method: post
+                cors: true

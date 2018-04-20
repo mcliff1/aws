@@ -1,6 +1,11 @@
 # AWS
 Collection of AWS Cloud resources
 
+The *cfn-ec2workstation.json* Cloud Formation template will build out a Serverless workstation with NodeJS, NPM, SLS, and REACT frameworks install. You MUST define the parameters **myKeyPair** (name of your SSH Key to access the instance), and optionally **stage** (dev or prod) and **myDomain** (if you have a hosted domain will set a convenience URL *bot-{stage}.{domainname}*) 
+
+<code>
+aws cloudformation create-stack --stack-name <stackName> --template-body file://cfn-ec2workstation.json --parameters ParameterKey=myKeyPair
+</code>
 ## Serverless
 
 Frameworks with API Gateway/Lambda

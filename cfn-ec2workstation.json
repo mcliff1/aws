@@ -1,5 +1,5 @@
 { "AWSTemplateFormatVersion" : "2010-09-09",
-	"Description" : "Template will build SLS workstation",
+	"Description" : "Template will build SLS workstation, can be used in all stages has SLS and REACT frameworks installed",
   "Parameters" :
 {
     "myKeyPair" : {
@@ -7,7 +7,7 @@
 	"Type" : "AWS::EC2::KeyPair::KeyName"
     },
     "myDomain" : {
-	"Description" : "Domain to add the sls-${region}",
+	"Description" : "(optional) Domain to add the sls-${region}",
 	"Type" : "String",
 	"Default" : "nodomainname"
     }
@@ -24,7 +24,12 @@
                 "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
                 "KeyName" : { "Ref" : "myKeyPair" },
                 "InstanceType" : "t2.micro",
-                "Tags" : [ { "Key" : "Role", "Value" : "SLS Workstation" } ],
+                "IamInstanceProfile" : { "Ref" : "InstanceRole" },
+                "SecurityGroups" : [ {"Ref" : "SG" } ],
+                "Tags" : [ 
+			{ "Key" : "Name", "Value" : "SLS Workstation" } ,
+			{ "Key" : "Created", "Value" : "CFN github aws/cgn-ec2workstation.json" } 
+		],
                 "UserData" : { "Fn::Base64" : { "Fn::Join" : ["",[
                         "#!/bin/bash", "\n",
                         "yum update -y", "\n",
@@ -40,6 +45,75 @@
                 }
         }
     },
+
+
+
+
+
+    "SLSRole": {
+        "Type" : "AWS::IAM::Role",
+        "Properties" : {
+                "AssumeRolePolicyDocument" : {
+			"Version" : "2012-10-17",
+			"Statement" : [ {
+				"Effect" : "Allow",
+				"Principal" : {
+					"Service" : [ "ec2.amazonaws.com" ]
+				},
+				"Action" : [ "sts:AssumeRole" ]
+			} ]
+		},
+                "Path" : "/",
+                "Policies" : [ 
+			{
+				"PolicyName" : "sls-iam-instance-policy",
+				"PolicyDocument": {
+					"Version" : "2012-10-17",
+					"Statement" : [
+						{
+							"Action" : [
+								"route53:ChangeResourceRecordSets",
+								"cloudformation:*"
+							],
+							"Resource" : "*",
+							"Effect" : "Allow"
+						}
+					]
+				}
+			}
+		]
+        }
+    },
+
+    "InstanceRole": {
+        "Type" : "AWS::IAM::InstanceProfile",
+        "Properties" : {
+                "Path" : "/",
+                "Roles" : [ 
+			{ "Ref" : "SLSRole" }
+		]
+        }
+    },
+
+
+    "SG": {
+        "Type" : "AWS::EC2::SecurityGroup",
+        "Properties" : {
+		"GroupDescription" : "SLS Workstation CFN generated group" ,
+                "SecurityGroupIngress" : [ 
+			{ "Description" : "Access to SSH", "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
+			{ "Description" : "REACT dev port", "IpProtocol" : "tcp", "FromPort" : "3000", "ToPort" : "3000", "CidrIp" : "0.0.0.0/0" },
+			{ "Description" : "http test port", "IpProtocol" : "tcp", "FromPort" : "8000", "ToPort" : "8000", "CidrIp" : "0.0.0.0/0" }
+		],
+                "Tags" : [ 
+			{ "Key" : "Name", "Value" : "SLS Workstation" } ,
+			{ "Key" : "Created", "Value" : "CFN github aws/cgn-ec2workstation.json" } 
+		]
+        }
+    },
+
+
+
 
 
     "DnsRecord": {
