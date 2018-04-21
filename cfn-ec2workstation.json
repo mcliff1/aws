@@ -39,6 +39,7 @@
                         "yum install -y nodejs", "\n",
                         "npm install -g serverless", "\n",
                         "npm install -g yarn", "\n",
+                        "npm install -g aws-amplify", "\n",
                         "npm install -g create-react-app", "\n",
                         "pip install -q pylint", "\n",
                         "date > bootstrap.log", "\n"]]}
