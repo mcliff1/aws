@@ -20,11 +20,15 @@ provider:
   region: us-east-1
   runtime: nodejs6.10
 
-functions:
 
 resources:
+
   Mappings: ${file(resources/mappings.yml)}
+
   #Outputs: ${file(resources/outputs.yml)}
+  #
+  #
+  #
   Resources:
     WebSite:
       Type: "AWS::S3::Bucket"
