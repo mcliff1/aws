@@ -73,6 +73,12 @@
 					"Statement" : [
 						{
 							"Action" : [
+								"cognito-idp:CreateUserPool",
+								"cognito-idp:UpdateUserPool",
+								"cognito-idp:DeleteUserPool",
+								"cognito-idp:CreateUserPoolClient",
+								"cognito-idp:UpdateUserPoolClient",
+								"cognito-idp:DeleteUserPoolClient",
 								"route53:ChangeResourceRecordSets",
 								"cloudformation:*"
 							],

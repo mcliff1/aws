@@ -1,4 +1,4 @@
-service: staticweb
+service: slsweb
 #  designed to be a 'simple' serverless site with managed content
 #  must run in us-east-1 for CDN and custom domain name/certs
 
@@ -12,8 +12,6 @@ custom:
   prodDomains:
     - www.mattcliff.net
     - mattcliff.net
-  devCognitoPool: 'arn:aws:cognito-idp:us-east-1:tbd'
-  prodCognitoPool: 'arn:tbd'
 
 provider:
   name: aws
@@ -44,7 +42,17 @@ resources:
         AliasAttributes:
           - email
         MfaConfiguration: OFF
-        UserPoolName: staticwebpool-${self:custom.stage}
+        UserPoolName: slswebpool-${self:custom.stage}
+
+
+    UserPoolClient:
+      Type: "AWS::Cognito::UserPoolClient"
+      Properties:
+        ClientName: slswebpool-${self:custom.stage}-app
+        ExplicitAuthFlows:
+          - ADMIN_NO_SRP_AUTH
+        GenerateSecret: False
+        UserPoolId: {Ref: UserPool}
 
 
     #DnsRecords: ${file(resources/${self:custom.stage}-dns.yml)}
