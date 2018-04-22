@@ -23,12 +23,12 @@ provider:
 
 resources:
 
-  Mappings: ${file(resources/mappings.yml)}
+  #Mappings: ${file(resources/mappings.yml)}
 
   #Outputs: ${file(resources/outputs.yml)}
-  #
-  #
-  #
+  
+  
+  
   Resources:
     WebSite:
       Type: "AWS::S3::Bucket"
@@ -36,5 +36,18 @@ resources:
         WebsiteConfiguration:
           ErrorDocument: index.html
           IndexDocument: index.html
+
+
+    UserPool:
+      Type: "AWS::Cognito::UserPool"
+      Properties:
+        AliasAttributes:
+          - email
+        MfaConfiguration: OFF
+        UserPoolName: staticwebpool-${self:custom.stage}
+
+
     #DnsRecords: ${file(resources/${self:custom.stage}-dns.yml)}
     #SSLCert: ${file(resources/${self:custom.stage}-ssl.yml)}
+
+
