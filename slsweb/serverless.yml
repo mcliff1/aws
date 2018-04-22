@@ -39,10 +39,15 @@ resources:
     UserPool:
       Type: "AWS::Cognito::UserPool"
       Properties:
-        AliasAttributes:
+        UsernameAttributes:
           - email
         MfaConfiguration: OFF
         UserPoolName: slswebpool-${self:custom.stage}
+        Schema:
+          - Name: email
+            AttributeDataType: String
+            Mutable: false
+            Required: true
 
 
     UserPoolClient:
