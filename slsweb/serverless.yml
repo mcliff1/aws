@@ -10,7 +10,7 @@ custom:
   #devDnsPrefix: sls-dev
   #prodDnsPrefix: sls
   prefix: sls
-  #prefixa: ${${self:custom.stage}DnsPrefix} # this format doesnt work
+  extra: ${file(resources/${self:custom.stage}-dns.yml)}
 
 provider:
   name: aws
@@ -41,7 +41,7 @@ resources:
           - Key: Name
             Value: "PUBLIC Bucket for static content on sls.${self:custom.domainname}"
           - Key: Name2
-            Value: "tag is ${self:custom.prefix}"
+            Value: "tag is ${self:custom.extra.prefixA}"
         #AccessControl: PublicRead
         #CorsConfiguration: Will Need This
         WebsiteConfiguration:
@@ -99,14 +99,7 @@ resources:
               - RegionMap
               - {Ref: 'AWS::Region'}
               - S3hostedzoneID 
-          DNSName:
-            Fn::Join:
-              - "."
-              - - {Ref: WebSiteS3}
-                - Fn::FindInMap:
-                    - RegionMap
-                    - {Ref: 'AWS::Region'}
-                    - websiteendpoint
+          DNSName: {"Fn::GetAtt": CDN.DomainName}
         #AliasTarget: 
         #  - {"Fn::GetAtt" : [ "WebSiteS3", "DomainName" ]}
 
