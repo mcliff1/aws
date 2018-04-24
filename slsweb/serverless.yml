@@ -6,31 +6,44 @@ frameworkVersion: ">=1.9.0 <2.0.0"
 
 custom:
   stage: ${opt:stage, self:provider.stage}
-  rootDomain: mattcliff.net
-  devDomains:
-    - qa.mattcliff.net
-  prodDomains:
-    - www.mattcliff.net
-    - mattcliff.net
+  domainname: ${opt:domain, "no_domain_name"}
+  #devDnsPrefix: sls-dev
+  #prodDnsPrefix: sls
+  prefix: sls
+  #prefixa: ${${self:custom.stage}DnsPrefix} # this format doesnt work
 
 provider:
   name: aws
   region: us-east-1
-  runtime: nodejs6.10
+  runtime: nodejs6.10   # not sure why I have this, should be python3.6
 
 
 resources:
-
-  #Mappings: ${file(resources/mappings.yml)}
+  #Conditions: { "Fn::Not" : [{ "Fn::Equals" : [{"Ref" : "domainname"}, "no_domain_name"] }] }
+  #
+  Conditions: 
+    CreateDnsResources:
+      Fn::Not: 
+        - Fn::Equals:
+            - ${self:custom.domainname}
+            - "no_domain_name"
+    
+  Mappings: ${file(resources/mappings.yml)}
 
   #Outputs: ${file(resources/outputs.yml)}
   
   
-  
   Resources:
-    WebSite:
+    WebSiteS3:
       Type: "AWS::S3::Bucket"
       Properties:
+        Tags:
+          - Key: Name
+            Value: "PUBLIC Bucket for static content on sls.${self:custom.domainname}"
+          - Key: Name2
+            Value: "tag is ${self:custom.prefix}"
+        #AccessControl: PublicRead
+        #CorsConfiguration: Will Need This
         WebsiteConfiguration:
           ErrorDocument: index.html
           IndexDocument: index.html
@@ -61,6 +74,48 @@ resources:
 
 
     #DnsRecords: ${file(resources/${self:custom.stage}-dns.yml)}
-    #SSLCert: ${file(resources/${self:custom.stage}-ssl.yml)}
+    DnsRecords:
+      Type: "AWS::Route53::RecordSet"
+      Condition: CreateDnsResources
+      Properties:
+        Comment: "SLS URL"
+        Type: A
+        #HostedZoneName: { "Fn::Join" : [ "", [ {"Ref" : {"Fn::S${self:custom.domainname}}, "."]]}
+        HostedZoneName: 
+          Fn::Join:
+            - ""
+            - - ${self:custom.domainname}
+              - "."
+        Name: 
+          Fn::Join:
+            - ""
+            - - ${self:custom.prefix}
+              - "."
+              - ${self:custom.domainname}
+              - "."
+        AliasTarget: 
+          HostedZoneId: 
+            Fn::FindInMap:
+              - RegionMap
+              - {Ref: 'AWS::Region'}
+              - S3hostedzoneID 
+          DNSName:
+            Fn::Join:
+              - "."
+              - - {Ref: WebSiteS3}
+                - Fn::FindInMap:
+                    - RegionMap
+                    - {Ref: 'AWS::Region'}
+                    - websiteendpoint
+        #AliasTarget: 
+        #  - {"Fn::GetAtt" : [ "WebSiteS3", "DomainName" ]}
 
 
+
+    SSLCert:
+      Type: "AWS::CertificateManager::Certificate"
+      Condition: CreateDnsResources
+      Properties:
+        DomainName: "${self:custom.prefix}.${self:custom.domainname}"
+
+    CDN: ${file(resources/cdn.yml)}
