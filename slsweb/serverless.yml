@@ -91,11 +91,7 @@ resources:
               - ${self:custom.domainname}
               - "."
         AliasTarget: 
-          HostedZoneId: 
-            Fn::FindInMap:
-              - RegionMap
-              - {Ref: 'AWS::Region'}
-              - S3hostedzoneID 
+          HostedZoneId: "Z2FDTNDATAQYW2"
           DNSName: {"Fn::GetAtt": CDN.DomainName}
 
 
@@ -106,4 +102,3 @@ resources:
         DomainName: "${self:custom.prefix}.${self:custom.domainname}"
 
     CDN: ${file(resources/cdn.yml)}
-
