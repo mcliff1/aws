@@ -19,8 +19,6 @@ provider:
 
 
 resources:
-  #Conditions: { "Fn::Not" : [{ "Fn::Equals" : [{"Ref" : "domainname"}, "no_domain_name"] }] }
-  #
   Conditions: 
     CreateDnsResources:
       Fn::Not: 
@@ -80,7 +78,6 @@ resources:
       Properties:
         Comment: "SLS URL"
         Type: A
-        #HostedZoneName: { "Fn::Join" : [ "", [ {"Ref" : {"Fn::S${self:custom.domainname}}, "."]]}
         HostedZoneName: 
           Fn::Join:
             - ""
@@ -100,9 +97,6 @@ resources:
               - {Ref: 'AWS::Region'}
               - S3hostedzoneID 
           DNSName: {"Fn::GetAtt": CDN.DomainName}
-        #AliasTarget: 
-        #  - {"Fn::GetAtt" : [ "WebSiteS3", "DomainName" ]}
-
 
 
     SSLCert:
@@ -112,3 +106,4 @@ resources:
         DomainName: "${self:custom.prefix}.${self:custom.domainname}"
 
     CDN: ${file(resources/cdn.yml)}
+
