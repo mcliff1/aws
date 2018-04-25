@@ -15,42 +15,18 @@ import os
 import argparse
 import json
 import dbm
-#import urllib2
+import urllib
 import requests
 
 
 config_file = os.path.join(os.getenv("HOME"), '.pyapi')
 methods = {
     'post' : lambda url, data: requests.post(url, data=data),
-    'get' : lambda url, data : requests.get(url, data=data),
+    'get' : lambda url, data : requests.get(url, params=data),
     'put' : lambda url, data : requests.put(url, data=data),
     'delete' : lambda url, data : requests.delete(url, data=data),
     'options' : lambda url, data : requests.options(url, data=data)
 }
-
-
-
-
-def do_call(action, target_url, data):
-    """
-    posts the data to the URL end point and action method
-    """
-    #req = requests.get(target_url)
-
-    response = methods[action](target_url, data)
-    #req = urllib2.Request(target_url)
-    #if data is not None:
-    #    req.add_header('Content-Type', 'application/json')
-    #    jsondata = json.dumps(data)
-    #    jsondataasbytes = jsondata.encode('utf-8')
-    #    req.add_header('Content-Length', len(jsondataasbytes))
-    #    response = urllib2.urlopen(req, jsondataasbytes)
-    #else:
-    #    response = urllib2.urlopen(req)
-
-    #print "send rc:%s" % response.code
-    return response
-
 
 
 def dump_config():
@@ -96,9 +72,6 @@ def remove_config(name):
     db = dbm.open(config_file, 'c')
     del db[name]
     db.close()
-
-
-
 
 
 
@@ -150,15 +123,10 @@ def main():
     if action is not None: 
         # execute the action now
         target = args['url'] if args['url'] is not None else get_config(args['name'])
-
-
-        #resp = do_call(action, target, args['data'])
         response = methods[action](target, args['data'])
 
         if args['verbose'] is not False:
-            #print resp.read()
             print response.text
-        #print resp.code
         print response.status_code
 
     
@@ -167,9 +135,6 @@ def main():
             print "both --url and --name must be present with the --save option"
             return(-4)
         save_config(args['name'], args['url'])
-
-
-
 
 if __name__ == "__main__":
     main()

@@ -31,6 +31,16 @@ functions:
           method: post
           cors: true
 
+      - http:
+          path: /
+          method: delete
+          cors: true
+
+      - http:
+          path: /
+          method: put
+          cors: true
+
 
 #  Outputs:
 #     NewOutput:
