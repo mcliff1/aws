@@ -12,6 +12,7 @@ Author: Matt Cliff
 Created: 25 Apr 2018
 """
 import os
+import ast
 import argparse
 import json
 import dbm
@@ -123,7 +124,8 @@ def main():
     if action is not None: 
         # execute the action now
         target = args['url'] if args['url'] is not None else get_config(args['name'])
-        response = methods[action](target, args['data'])
+        data = None if args['data'] is None else ast.literal_eval(args['data'])
+        response = methods[action](target, data)
 
         if args['verbose'] is not False:
             print response.text
