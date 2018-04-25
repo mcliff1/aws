@@ -82,13 +82,13 @@ def main():
     """
 
 
-    parser = argparse.ArgumentParser(prog='pyapi', description='PYthon API caller utlity')
+    parser = argparse.ArgumentParser(prog='pyapi', description='PYthon API caller utilty')
     parser.add_argument('-l', '--list', action="store_true", help='print list of saved names and exit')
-    parser.add_argument('-s', '--save', action="store_true", help='saves <url> to <name> in config')
-    parser.add_argument('-r', '--remove', action="store_true", help='removes <name> from the config')
-    parser.add_argument('-a', '--action', help='HTTP action - POST GET PUT DELETE')
+    parser.add_argument('-s', '--save', action="store_true", help='saves URL to NAME in config')
+    parser.add_argument('-r', '--remove', action="store_true", help='removes NAME from the config')
+    parser.add_argument('-a', '--action', help='HTTP action - post get put delete')
     parser.add_argument('-n', '--name', help='name to reference the url in ~/.pyapi')
-    parser.add_argument('-u', '--url', nargs='?', help='URL to post to (overrides --name)')
+    parser.add_argument('-u', '--url', help='URL to post to (overrides NAME)')
     parser.add_argument('-d', '--data', help='JSON formatted string to pass in')
     parser.add_argument('-v', '--verbose', action="store_true", help='shows full output')
     args = vars(parser.parse_args())
