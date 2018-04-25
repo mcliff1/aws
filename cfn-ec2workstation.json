@@ -41,6 +41,7 @@
                         "npm install -g yarn", "\n",
                         "npm install -g aws-amplify", "\n",
                         "npm install -g create-react-app", "\n",
+                        "pip install -q boto3", "\n",
                         "pip install -q pylint", "\n",
                         "date > bootstrap.log", "\n"]]}
                 }
