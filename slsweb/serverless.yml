@@ -6,7 +6,7 @@ frameworkVersion: ">=1.9.0 <2.0.0"
 
 custom:
   stage: ${opt:stage, self:provider.stage}
-  domainname: ${opt:domain, "no_domain_name"}
+  domainname: ${opt:domainname, "no_domain_name"}
   #devDnsPrefix: sls-dev
   #prodDnsPrefix: sls
   prefix: sls
@@ -16,6 +16,35 @@ provider:
   name: aws
   region: us-east-1
   runtime: nodejs6.10   # not sure why I have this, should be python3.6
+
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 's3:PutObject'
+        - 's3:PutObjectAcl'
+      Resource:
+        Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: WebSiteS3
+    - Effect: 'Allow'
+      Action:
+        - 's3:GetObject'
+      Resource:
+        Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: BuildS3
+
+functions:
+  deploySlsContent:
+    handler: upload_static_content.lambda_handler
+    description: Deploys the output of CodeBuild to the runtime S3 hosted bucket
+    environment:
+      SOURCE_BUCKET: {Ref: BuildS3}
+      TARGET_BUCKET: {Ref: WebSiteS3}
+
+
 
 
 resources:
@@ -32,6 +61,14 @@ resources:
   
   
   Resources:
+    BuildS3:
+      Type: "AWS::S3::Bucket"
+      Properties:
+        Tags:
+          - Key: Name
+            Value: "Code Build Target for static content on sls.${self:custom.domainname}"
+
+
     WebSiteS3:
       Type: "AWS::S3::Bucket"
       Properties:
@@ -46,6 +83,59 @@ resources:
           ErrorDocument: index.html
           IndexDocument: index.html
 
+    WebSiteS3Policy:
+      Type: "AWS::S3::BucketPolicy"
+      Properties:
+        Bucket: {Ref: WebSiteS3}
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:aws:s3:::"
+                  - {Ref: WebSiteS3}
+                  - "/*"
+
+
+
+    # available containers - https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
+    CodeBuild:
+      Type: "AWS::CodeBuild::Project"
+      DependsOn: CodeBuildRole
+      Properties:
+        Tags:
+          - Key: Name
+            Value: "build static content on sls.${self:custom.domainname}"
+        ServiceRole: {Ref: CodeBuildRole}
+        Environment:
+          Type: LINUX_CONTAINER
+          ComputeType: BUILD_GENERAL1_SMALL
+          Image: aws/codebuild/ubuntu-base:14.04
+        Source: 
+          Type: GITHUB
+          Location: https://github.com/mcliff1/acg-react
+        Artifacts: 
+          Type: S3
+          Location: {Ref: BuildS3}
+          Name: slsweb.zip
+          Packaging: ZIP
+
+    CodeBuildRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - "arn:aws:iam::aws:policy/AdministratorAccess"
 
     UserPool:
       Type: "AWS::Cognito::UserPool"

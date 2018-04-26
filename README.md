@@ -33,7 +33,7 @@ From AWS CLI
 From AWS Console - use `cfn-ec2workstation.json` requires a KeyPair, optionally can add a domainname to set a convenince URL _sls-{region}.{domainname}_
 
 1 Check out this Git Repository and change into the <code>slsweb</code> directory
-1 **TODO** enter required configuration
+1 **TODO** enter required configuration otherwise you will get errors about SSLCert being unknown.
    * domainname
    
 1 Run `sls deploy` and it will deploy entire stack

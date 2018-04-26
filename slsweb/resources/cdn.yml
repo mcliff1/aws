@@ -1,4 +1,5 @@
 Type: "AWS::CloudFront::Distribution"
+DependsOn: SSLCert
 Properties:
   DistributionConfig:
     ViewerCertificate:
