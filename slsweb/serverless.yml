@@ -229,5 +229,5 @@ resources:
       Value:
         "Fn::GetAtt": [ WebSiteS3, Arn ]
       Export:
-        Name: ${self:service}:${opt:stage}:WebSiteS3Arn
+        Name: ${self:service}:${self:custom.stage}:WebSiteS3Arn
 
