@@ -8,7 +8,7 @@ Properties:
     Enabled: true
     HttpVersion: http2
     Aliases: 
-      - ${self:custom.domainname}
+      - ${self:custom.prefix}.${self:custom.domainname}
     DefaultRootObject: index.html
     Origins:
       - DomainName: { "Fn::Join":

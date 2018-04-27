@@ -1,6 +1,6 @@
 import os
 import boto3
-import StringIO
+from io import BytesIO
 import zipfile
 
 
@@ -15,16 +15,18 @@ def lambda_handler(event, context):
     deploy_bucket = s3.Bucket(os.environ['TARGET_BUCKET'])
 
 
-    build_zip = StringIO.StringIO()
-    build_bucket.download_fileobj('slsbuild.zip', build_zip)
+    #build_zip = StringIO.StringIO()
+    if not zip_fileref:
+        zip_fileref = BytesIO()
+    build_bucket.download_fileobj('slsbuild.zip', zip_fileref)
 
     # now upload
-    with zipfile.ZipFile(build_zip) as myzip:
+    with zipfile.ZipFile(zip_fileref) as myzip:
         for nm in myzip.namelist():
             obj = myzip.open(nm)
             deploy_bucket.upload_fileobj(obj, nm)
             deploy_bucket.Object(nm).Acl().put(ACL='public-read')
 
     
-    return 'Copied Code from one bucket to antoher'
+    return 'Copied Code from one bucket to another'
 
