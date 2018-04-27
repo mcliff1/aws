@@ -10,14 +10,23 @@ custom:
   #devDnsPrefix: sls-dev
   #prodDnsPrefix: sls
   prefix: sls
+  buildPackage: slsbuild.zip
   extra: ${file(resources/${self:custom.stage}-dns.yml)}
 
 provider:
   name: aws
   region: us-east-1
-  runtime: nodejs6.10   # not sure why I have this, should be python3.6
+  runtime: python3.6
 
   iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 'sns:Publish'
+      Resource:
+        Fn::Join:
+          - ''
+          - - 'arn:aws:sns:::'
+            - Ref: PublishSNS
     - Effect: 'Allow'
       Action:
         - 's3:PutObject'
@@ -27,14 +36,18 @@ provider:
           - ''
           - - 'arn:aws:s3:::'
             - Ref: WebSiteS3
+            - '/*'
     - Effect: 'Allow'
       Action:
         - 's3:GetObject'
+        - 's3:GetObjectAcl'
+        - 's3:ListObjects'
       Resource:
         Fn::Join:
           - ''
           - - 'arn:aws:s3:::'
             - Ref: BuildS3
+            - '/*'
 
 functions:
   deploySlsContent:
@@ -43,6 +56,15 @@ functions:
     environment:
       SOURCE_BUCKET: {Ref: BuildS3}
       TARGET_BUCKET: {Ref: WebSiteS3}
+      BUILD_PACKAGE: ${self:custom.buildPackage}
+      SNS_TOPIC: {Ref: PublishSNS}
+    events:
+      - s3:
+          bucket: {Ref: BuildS3}
+          events: s3:ObjectCreated:*
+          rules:
+            - suffix: .zip
+     
 
 
 
@@ -57,7 +79,6 @@ resources:
     
   Mappings: ${file(resources/mappings.yml)}
 
-  #Outputs: ${file(resources/outputs.yml)}
   
   
   Resources:
@@ -121,7 +142,7 @@ resources:
         Artifacts: 
           Type: S3
           Location: {Ref: BuildS3}
-          Name: slsweb.zip
+          Name: ${self:custom.buildPackage}
           Packaging: ZIP
 
     CodeBuildRole:
@@ -136,6 +157,14 @@ resources:
             Action: sts:AssumeRole
         ManagedPolicyArns:
           - "arn:aws:iam::aws:policy/AdministratorAccess"
+
+    PublishSNS:
+      Type: "AWS::SNS::Topic"
+      Properties:
+        DisplayName: SLS Web Deployment
+        TopicName: SLSWebTopic
+      
+
 
     UserPool:
       Type: "AWS::Cognito::UserPool"
@@ -192,3 +221,13 @@ resources:
         DomainName: "${self:custom.prefix}.${self:custom.domainname}"
 
     CDN: ${file(resources/cdn.yml)}
+
+  #Outputs: ${file(resources/outputs.yml)}
+  Outputs:
+    WebSiteS3Arn:
+      Description: ARN for the S3 bucket hosting the website content
+      Value:
+        "Fn::GetAtt": [ WebSiteS3, Arn ]
+      Export:
+        Name: ${self:service}:${opt:stage}:WebSiteS3Arn
+
