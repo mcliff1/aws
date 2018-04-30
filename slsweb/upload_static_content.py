@@ -2,6 +2,7 @@ import os
 import boto3
 from io import BytesIO
 import zipfile
+import mimetypes
 
 def lambda_handler(event, context):
     """
@@ -24,7 +25,7 @@ def lambda_handler(event, context):
         with zipfile.ZipFile(zip_fileref) as myzip:
             for nm in myzip.namelist():
                 obj = myzip.open(nm)
-                deploy_bucket.upload_fileobj(obj, nm)
+                deploy_bucket.upload_fileobj(obj, nm, ExtraArgs={'ContentType': mimetypes.guess_type(nm)[0])
                 deploy_bucket.Object(nm).Acl().put(ACL='public-read')
 
 

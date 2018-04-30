@@ -59,11 +59,11 @@ functions:
       BUILD_PACKAGE: ${self:custom.buildPackage}
       SNS_TOPIC: {Ref: PublishSNS}
     events:
-      - s3:
-          bucket: {Ref: BuildS3}
-          events: s3:ObjectCreated:*
-          rules:
-            - suffix: .zip
+      #- s3:
+          #bucket: {Ref: BuildS3}
+          #events: s3:ObjectCreated:*
+          #rules:
+            #- suffix: .zip
      
 
 
