@@ -1,0 +1,415 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Creates VPC with public and private subnets, AZs are hardcoded as (a,b,c)",
+  "Parameters" : {
+    "Project" : {
+      "Description" : "Enter Project Name",
+      "Type" : "String",
+      "Default" : "VPC Template"
+    },
+    "VPCCidrBlock" : {
+      "Description" : "IPV4 CIDR block for the VPC",
+      "Type" : "String",
+      "Default": "10.0.0.0/16",
+      "MinLength": "10",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    },
+    "PublicSubnetCidrBlock1" : {
+      "Description" : "IPV4 CIDR block for the VPC",
+      "Type" : "String",
+      "Default": "10.0.1.0/24",
+      "MinLength": "10",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    },
+    "PublicSubnetCidrBlock2" : {
+      "Description" : "IPV4 CIDR block for the VPC",
+      "Type" : "String",
+      "Default": "10.0.2.0/24",
+      "MinLength": "10",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    },
+    "PublicSubnetCidrBlock3" : {
+      "Description" : "IPV4 CIDR block for the VPC",
+      "Type" : "String",
+      "Default": "10.0.3.0/24",
+      "MinLength": "10",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    },
+    "PrivateSubnetCidrBlock1" : {
+      "Description" : "IPV4 CIDR block for the VPC",
+      "Type" : "String",
+      "Default": "10.0.11.0/24",
+      "MinLength": "10",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    },
+    "PrivateSubnetCidrBlock2" : {
+      "Description" : "IPV4 CIDR block for the VPC",
+      "Type" : "String",
+      "Default": "10.0.12.0/24",
+      "MinLength": "10",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    },
+    "PrivateSubnetCidrBlock3" : {
+      "Description" : "IPV4 CIDR block for the VPC",
+      "Type" : "String",
+      "Default": "10.0.13.0/24",
+      "MinLength": "10",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    }
+  },
+  "Resources": {
+    "VPC": {
+      "Type" : "AWS::EC2::VPC",
+      "Properties" : {
+        "EnableDnsSupport" : true,
+        "EnableDnsHostnames" : true,
+        "CidrBlock" : {"Ref" : "VPCCidrBlock" },
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Ref" : "AWS::StackName" }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+    "PublicSubnet1" : {
+      "Type" : "AWS::EC2::Subnet",
+      "DependsOn" : "VPC",
+      "Properties" : {
+        "VpcId" : {"Ref" : "VPC"},
+        "AvailabilityZone" : {
+          "Fn::Join" : [ "", [ {"Ref" : "AWS::Region"}, "a" ]]
+        },
+        "CidrBlock": {"Ref": "PublicSubnetCidrBlock1"},
+        "MapPublicIpOnLaunch": true,
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Fn::Join" : ["-" , [{ "Ref" : "AWS::StackName" }, "public-az1" ]] }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+    "PublicSubnet2" : {
+      "Type" : "AWS::EC2::Subnet",
+      "DependsOn" : "VPC",
+      "Properties" : {
+        "VpcId" : {"Ref" : "VPC"},
+        "AvailabilityZone" : {
+          "Fn::Join" : [ "", [ {"Ref" : "AWS::Region"}, "b" ]]
+        },
+        "CidrBlock": {"Ref": "PublicSubnetCidrBlock2"},
+        "MapPublicIpOnLaunch": true,
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Fn::Join" : ["-" , [{ "Ref" : "AWS::StackName" }, "public-az2" ]] }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+    "PublicSubnet3" : {
+      "Type" : "AWS::EC2::Subnet",
+      "DependsOn" : "VPC",
+      "Properties" : {
+        "VpcId" : {"Ref" : "VPC"},
+        "AvailabilityZone" : {
+          "Fn::Join" : [ "", [ {"Ref" : "AWS::Region"}, "c" ]]
+        },
+        "CidrBlock": {"Ref": "PublicSubnetCidrBlock3"},
+        "MapPublicIpOnLaunch": true,
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Fn::Join" : ["-" , [{ "Ref" : "AWS::StackName" }, "public-az3" ]] }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+    "PrivateSubnet1" : {
+      "Type" : "AWS::EC2::Subnet",
+      "DependsOn" : "VPC",
+      "Properties" : {
+        "VpcId" : {"Ref" : "VPC"},
+        "AvailabilityZone" : {
+          "Fn::Join" : [ "", [ {"Ref" : "AWS::Region"}, "a" ]]
+        },
+        "CidrBlock": {"Ref": "PrivateSubnetCidrBlock1"},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Fn::Join" : ["-" , [{ "Ref" : "AWS::StackName" }, "private-az1" ]] }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+    "PrivateSubnet2" : {
+      "Type" : "AWS::EC2::Subnet",
+      "DependsOn" : "VPC",
+      "Properties" : {
+        "VpcId" : {"Ref" : "VPC"},
+        "AvailabilityZone" : {
+          "Fn::Join" : [ "", [ {"Ref" : "AWS::Region"}, "b" ]]
+        },
+        "CidrBlock": {"Ref": "PrivateSubnetCidrBlock2"},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Fn::Join" : ["-" , [{ "Ref" : "AWS::StackName" }, "private-az2" ]] }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+    "PrivateSubnet3" : {
+      "Type" : "AWS::EC2::Subnet",
+      "DependsOn" : "VPC",
+      "Properties" : {
+        "VpcId" : {"Ref" : "VPC"},
+        "AvailabilityZone" : {
+          "Fn::Join" : [ "", [ {"Ref" : "AWS::Region"}, "c" ]]
+        },
+        "CidrBlock": {"Ref": "PrivateSubnetCidrBlock3"},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Fn::Join" : ["-" , [{ "Ref" : "AWS::StackName" }, "private-az3" ]] }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+
+    "InternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Ref" : "AWS::StackName"  }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+    "GatewayToInternet" : {
+      "Type" : "AWS::EC2::VPCGatewayAttachment",
+      "DependsOn" : [ "InternetGateway", "VPC" ],
+      "Properties" : {
+        "VpcId" : {"Ref": "VPC"},
+        "InternetGatewayId": {"Ref": "InternetGateway"}
+      }
+    },
+    "PublicRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "DependsOn" : "VPC",
+      "Properties" : {
+        "VpcId" : {"Ref": "VPC"},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Fn::Join" : ["-" , [{ "Ref" : "AWS::StackName" }, "public" ]] }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+
+    "PublicRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "DependsOn" : [ "InternetGateway", "PublicRouteTable" ],
+      "Properties" : {
+        "RouteTableId" : {"Ref": "PublicRouteTable"},
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId": {"Ref": "InternetGateway"}
+      }
+    },
+    "PublicRouteAssociationSubnet1" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "DependsOn" : [ "PublicSubnet1", "PublicRouteTable" ],
+      "Properties" : {
+        "RouteTableId" : {"Ref": "PublicRouteTable"},
+        "SubnetId": {"Ref": "PublicSubnet1"}
+      }
+    },
+    "PublicRouteAssociationSubnet2" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "DependsOn" : [ "PublicSubnet1", "PublicRouteTable" ],
+      "Properties" : {
+        "RouteTableId" : {"Ref": "PublicRouteTable"},
+        "SubnetId": {"Ref": "PublicSubnet2"}
+      }
+    },
+    "PublicRouteAssociationSubnet3" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "DependsOn" : [ "PublicSubnet1", "PublicRouteTable" ],
+      "Properties" : {
+        "RouteTableId" : {"Ref": "PublicRouteTable"},
+        "SubnetId": {"Ref": "PublicSubnet3"}
+      }
+    },
+
+    "PrivateRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "DependsOn" : "VPC",
+      "Properties" : {
+        "VpcId" : {"Ref": "VPC"},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Fn::Join" : ["-" , [{ "Ref" : "AWS::StackName" }, "private" ]] }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+
+    "PrivateRouteAssociationSubnet1" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "DependsOn" : [ "PrivateSubnet1", "PrivateRouteTable" ],
+      "Properties" : {
+        "RouteTableId" : {"Ref": "PrivateRouteTable"},
+        "SubnetId": {"Ref": "PrivateSubnet1"}
+      }
+    },
+    "PrivateRouteAssociationSubnet2" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "DependsOn" : [ "PrivateSubnet2", "PrivateRouteTable" ],
+      "Properties" : {
+        "RouteTableId" : {"Ref": "PrivateRouteTable"},
+        "SubnetId": {"Ref": "PrivateSubnet2"}
+      }
+    },
+    "PrivateRouteAssociationSubnet3" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "DependsOn" : [ "PrivateSubnet3", "PrivateRouteTable" ],
+      "Properties" : {
+        "RouteTableId" : {"Ref": "PrivateRouteTable"},
+        "SubnetId": {"Ref": "PrivateSubnet3"}
+      }
+    },
+
+
+    "InternalAccessSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "DependsOn" : "VPC",
+      "Properties" : {
+        "VpcId": {"Ref": "VPC"},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value" : { "Fn::Join" : ["-" , [{ "Ref" : "AWS::StackName" }, "internalAccessSecurityGroup" ]] }
+          },
+          {
+            "Key": "Project",
+            "Value" : { "Ref" : "Project" }
+          }
+        ]
+      }
+    },
+    "InternalAccessSecurityGroupIngress" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "DependsOn" : "InternalAccessSecurityGroup",
+      "Properties" : {
+        "GroupId": {"Ref": "InternalAccessSecurityGroup"},
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {"Ref" : "InternalAccessSecurityGroup"}
+      }
+    }
+
+
+
+  },
+  "Outputs": {
+    "Project" : {
+      "Description" : "The Project Name",
+      "Value" : {"Ref": "Project"}
+    },
+    "VPC" : {
+      "Description" : "VPC Created",
+      "Value" : {"Ref": "VPC"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-VpcId"}}
+    },
+    "PublicSubnet1" : {
+      "Description" : "Public Subnet in AZ1",
+      "Value" : {"Ref": "PublicSubnet1"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicSubnet1Id"}}
+    },
+    "InternalAccessSecurityGroup" : {
+      "Description" : "Security Group that allows instance to instance connection",
+      "Value" : {"Ref": "InternalAccessSecurityGroup"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-SecurityGroupId"}}
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+          {
+            "Label" : { "default" : "Project Information"},
+            "Parameters" : [ "Project" ]
+          },
+          {
+            "Label" : { "default" : "Subnets"},
+            "Parameters" : [
+              "VPCCidrBlock",
+              "PublicSubnetCidrBlock1",
+              "PublicSubnetCidrBlock2",
+              "PublicSubnetCidrBlock3",
+              "PrivateSubnetCidrBlock1",
+              "PrivateSubnetCidrBlock2",
+              "PrivateSubnetCidrBlock3"
+            ]
+
+          }
+      ],
+      "ParameterLabels" : {
+        "VPCCidrBlock": { "default" : "VPC Subnet" },
+        "PublicSubnetCidrBlock1": { "default" : "Public Subnet 1" },
+        "PublicSubnetCidrBlock2": { "default" : "Public Subnet 2" },
+        "PublicSubnetCidrBlock3": { "default" : "Public Subnet 3" }
+      }
+    }
+  }
+}

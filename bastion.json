@@ -1,0 +1,187 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Creates Bastion Host in existing public VPC",
+  "Parameters" : {
+    "Project" : {
+      "Description" : "Enter Project Name",
+      "Type" : "String",
+      "Default" : "Bastion Template"
+    },
+    "VPCStackName" : {
+      "Description" : "VPC Stack (from vpc.json) pulls in parameters",
+      "Type" : "String"
+    },
+    "Ec2KeyPair" : {
+      "Description" : "Key Pair to use to access the EC2 instance",
+      "Type" : "String"
+    },
+    "ConfigureDns" : {
+      "Description" : "Configure Route 53 DNS Alias for RDS (ensure it does not already exist)",
+      "Type" : "String",
+      "Default" : "false",
+      "AllowedValues" : [ "true", "false" ]
+    },
+    "NetworkAccessIP" : {
+      "Description" : "Configure Route 53 DNS Alias for RDS (ensure it does not already exist)",
+      "Type" : "String",
+      "Default" : "0.0.0.0/0",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "InstanceType": {
+      "Description": "Select Instance Type.",
+      "Type": "String",
+      "Default": "t2.small",
+      "AllowedValues": [
+        "t2.nano",
+        "t2.micro",
+        "t2.small",
+        "t2.medium",
+        "c4.large",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge"
+      ],
+      "ConstraintDescription": "Must be a valid EC2 instance type."
+    }
+  },
+  "Mappings": {
+    "RegionMap" : {
+      "us-west-2" : {
+        "AMIAmazon": "ami-b04e92d0",
+        "AMICentos": "ami-d2c924b2",
+        "AMIRhel": "ami-775e4f16",
+        "AMISuse": "ami-d2627db3",
+        "AMIUbuntu": "ami-d732f0b7"
+      },
+      "us-east-1": {
+        "AMIAmazon": "ami-c481fad3",
+        "AMICentos": "ami-6d1c2007",
+        "AMIRhel": "ami-2051294a",
+        "AMISuse": "ami-b7b4fedd",
+        "AMIUbuntu": "ami-2d39803a",
+      }
+    },
+    "bootstrap": {
+
+      "rhel": {
+        "warmebs": "echo 'ACTION: Performing EBS Warming' && dd if=/dev/xvda of=/dev/xvda conv=notrunc bs=1M status=progress",
+        "yumupdate": "yum update -y",
+        "installpackagelist": "yum install -y"
+      },
+      "ubuntu": {
+        "warmebs": "echo ''ACTION: Performing EBS Warming'' && dd if=/dev/xvda of=/dev/xvda conv=notrunc bs=1M status=progress",
+        "installpackagelist": "apt-get update && apt-get install"
+      },
+      "linux": {
+        "installchefdk": "curl -L https://omnitruck.chef.io/install.sh | bash -s -- -P
+        chefdk -v",
+        "installchefclient": "curl -L https://omnitruck.chef.io/install.sh | bash -s --
+        -P chef -v"
+      }
+    }
+
+  },
+  "Conditions": {
+    "ConfigureRoute53" : {"Fn::Equals": [ {"Ref": "ConfigureDns"}, "true"]}
+  },
+  "Resources": {
+
+
+
+
+    "BastionSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "SSH Access to Bastion Instance",
+        "VpcId": {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-VpcId"}},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value": {"Fn::Join" : ["", [{"Ref": "AWS::StackName"}, "-bastion-access"]]}
+          },
+          {
+            "Key": "Project",
+            "Value": {"Ref": "Project"}
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort" : "22",
+            "ToPort" : "22",
+            "CidrIp" : { "Ref" : "NetworkAccessIP" }
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+            "CidrIp" : { "Ref" : "NetworkAccessIP" }
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "-1",
+            "CidrIp" : "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    "EC2Instance" : {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": [ "BastionSecurityGroup" ],
+      "Properties": {
+        "ImageId" : {"Fn::FindInMap" : [ "RegionMap", {"Ref" : "AWS::Region"}, "AMIAmazon"] },
+        "InstanceInitiatedShutdownBehavior": "stop",
+        "InstanceType" : {"Ref": "InstanceType"},
+        "KeyName" : {"Ref": "Ec2KeyPair"},
+        "SecurityGroupIds": [
+          {"Ref" : "BastionSecurityGroup"}
+        ],
+        "SubnetId" : {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-PublicSubnet1Id"}},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value": {"Fn::Join" : ["", [{"Ref": "AWS::StackName"}, "-bastion-ec2"]]}
+          },
+          {
+            "Key": "Project",
+            "Value": {"Ref": "Project"}
+          }
+        ]
+
+
+      }
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+          {
+            "Label" : { "default" : "Project Information"},
+            "Parameters" : [ "Project" ]
+          },
+          {
+            "Label" : { "default" : "Subnets"},
+            "Parameters" : [
+              "Ec2KeyPair",
+              "NetworkAccessIP",
+              "VPCStackName",
+              "ConfigureDns",
+              "InstanceType"
+            ]
+
+          }
+      ],
+      "ParameterLabels" : {
+        "Ec2KeyPair": { "default" : "Key Pair for EC2 instance" },
+        "NetworkAccessIP": { "default" : "Network to allow SSH access" },
+        "VPCStackName": { "default" : "VPC Stack to build on" },
+        "ConfigureDns": { "default" : "Update Route53" }
+      }
+    }
+  }
+}

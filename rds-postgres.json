@@ -1,0 +1,93 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Creates RDS instance in an existing VPC",
+  "Parameters" : {
+    "Project" : {
+      "Description" : "Enter Project Name",
+      "Type" : "String",
+      "Default" : "Postgres RDS Template"
+    },
+    "VPCStackName" : {
+      "Description" : "VPC Stack (from vpc.json) pulls in parameters",
+      "Type" : "String"
+    },
+    "ConfigureDns" : {
+      "Description" : "Configure Route 53 DNS Alias for RDS (ensure it does not already exist)",
+      "Type" : "String",
+      "Default" : "false",
+      "AllowedValues" : [ "true", "false" ]
+    },
+    "TcpPort": {
+      "Description": "Enter RDS Listening TCP Port number.",
+      "Type": "Number",
+      "Default": "5432"
+    },
+    "InstanceType": {
+      "Description": "Select Instance Type.",
+      "Type": "String",
+      "Default": "db.t2.small",
+      "AllowedValues": [
+        "db.t1.micro",
+        "db.t2.micro",
+        "db.t2.small",
+        "db.t2.medium",
+        "db.t2.large",
+        "db.m1.small",
+        "db.m1.medium",
+        "db.m1.large",
+        "db.m1.xlarge",
+        "db.m3.medium",
+        "db.m3.large",
+        "db.m3.xlarge",
+        "db.m3.2xlarge",
+        "db.m4.large",
+        "db.m4.xlarge",
+        "db.m4.2xlarge",
+        "db.m4.4xlarge",
+        "db.m4.10xlarge",
+        "db.r3.large",
+        "db.r3.xlarge",
+        "db.r3.2xlarge",
+        "db.r3.4xlarge",
+        "db.r3.8xlarge"
+      ],
+      "ConstraintDescription": "Must be a valid EC2 instance type."
+    }
+  },
+  "Mappings": {
+  },
+  "Conditions": {
+    "ConfigureRoute53" : {"Fn::Equals": [ {"Ref": "ConfigureDns"}, "true"]}
+  },
+  "Resources": {
+    "RDSAccessSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Group assigned to RDS instance",
+        "VpcId": {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-VpcId"}},
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value": {"Fn::Join" : ["", [{"Ref": "AWS::StackName"}, "-rds"]]}
+          },
+          {
+            "Key": "Project",
+            "Value": {"Ref": "Project"}
+          }
+        ]
+
+      }
+    },
+    "AccessSecurityGroupIngress" : {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "DependsOn": "RDSAccessSecurityGroup",
+      "Properties": {
+        "GroupId" : {"Ref" : "RDSAccessSecurityGroup"},
+        "IpProtocol": "tcp",
+        "FromPort" : {"Ref": "TcpPort"},
+        "ToPort" : {"Ref": "TcpPort"},
+        "SourceSecurityGroupId": {"Ref":"RDSAccessSecurityGroup"}
+      }
+    }
+  }
+}
