@@ -337,6 +337,7 @@
       "DependsOn" : "VPC",
       "Properties" : {
         "VpcId": {"Ref": "VPC"},
+        "GroupDescription" : "SSH Access to Bastion Instance",
         "Tags" : [
           {
             "Key": "Name",
@@ -376,6 +377,16 @@
       "Description" : "Public Subnet in AZ1",
       "Value" : {"Ref": "PublicSubnet1"},
       "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicSubnet1Id"}}
+    },
+    "PublicSubnet2" : {
+      "Description" : "Public Subnet in AZ2",
+      "Value" : {"Ref": "PublicSubnet2"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicSubnet2Id"}}
+    },
+    "PublicSubnet3" : {
+      "Description" : "Public Subnet in AZ3",
+      "Value" : {"Ref": "PublicSubnet3"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicSubnet3Id"}}
     },
     "InternalAccessSecurityGroup" : {
       "Description" : "Security Group that allows instance to instance connection",

@@ -1,36 +1,30 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Creates RDS instance in an existing VPC",
+  "Description" : "Restores a Postres RDS instance from a snapshot in an existing VPC",
   "Parameters" : {
     "Project" : {
       "Description" : "Enter Project Name",
       "Type" : "String",
-      "Default" : "Postgres RDS Template"
+      "Default" : "RDS Snapshot restore Template"
     },
     "VPCStackName" : {
       "Description" : "VPC Stack (from vpc.json) pulls in parameters",
       "Type" : "String"
     },
-    "DbName" : {
-      "Description" : "Database Name",
-      "Type" : "String",
-      "Default" : "dbname"
-    },
-    "DbUser" : {
-      "Description" : "Database Master User",
-      "Type" : "String",
-      "Default" : "dbuser"
-    },
-    "DbPassword" : {
-      "Description" : "Database Master User Password",
-      "Type" : "String",
-      "Default" : "dbpassword"
+    "SnapshotArn" : {
+      "Description" : "ARN for Snapshot to use to restore",
+      "Type" : "String"
     },
     "ConfigureDns" : {
       "Description" : "Configure Route 53 DNS Alias for RDS (ensure it does not already exist)",
       "Type" : "String",
       "Default" : "false",
       "AllowedValues" : [ "true", "false" ]
+    },
+    "TcpPort": {
+      "Description": "Enter RDS Listening TCP Port number (select 5432 for default postgres and 3306 for default mysql)",
+      "Type": "Number",
+      "Default": "5432"
     },
     "AutoMinorVersionUpgrade": {
       "Description": "Allow Automatic Minor Version Upgrades",
@@ -44,31 +38,10 @@
       "Default" : "false",
       "AllowedValues" : [ "true", "false" ]
     },
-    "TcpPort": {
-      "Description": "Enter RDS Listening TCP Port number.",
-      "Type": "Number",
-      "Default": "5432"
-    },
-    "AllocatedStorage": {
-      "Description": "This size of database (Gb)",
-      "Type": "Number",
-      "Default": "5",
-      "MinValue": "5",
-      "MaxValue": "6144",
-      "ConstraintDescription": "Must be between 5-6144"
-    },
-    "DbVersion": {
-      "Description": "Select PostgreSQL Version",
-      "Type":"String",
-      "Default":"9.5.9",
-      "AllowedValues":[
-        "10.1", "9.6.x", "9.6.6", "9.5.x", "9.5.9", "9.4.14", "9.3.19"
-      ]
-    },
     "InstanceType": {
       "Description": "Select Instance Type.",
       "Type": "String",
-      "Default": "db.t2.small",
+      "Default": "db.t2.micro",
       "AllowedValues": [
         "db.t1.micro",
         "db.t2.micro",
@@ -106,7 +79,7 @@
     "RDSAccessSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : "Group assigned to RDS instance",
+        "GroupDescription" : "Instance to RDS access",
         "VpcId": {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-VpcId"}},
         "Tags" : [
           {
@@ -145,25 +118,18 @@
     },
     "DbInstance": {
       "Type": "AWS::RDS::DBInstance",
-      "DeletionPolicy": "Snapshot",
       "DependsOn": ["DbSubnetGroup", "RDSAccessSecurityGroup"],
       "Properties": {
-        "AllocatedStorage": {"Ref": "AllocatedStorage"},
+        "DBSnapshotIdentifier": {"Ref": "SnapshotArn" },
         "AllowMajorVersionUpgrade": false,
         "AutoMinorVersionUpgrade": {"Ref": "AutoMinorVersionUpgrade"},
         "DBInstanceClass": {"Ref": "InstanceType"},
         "DBInstanceIdentifier": {"Ref": "AWS::StackName"},
         "DBSubnetGroupName": {"Ref": "DbSubnetGroup"},
-        "Engine": "postgres",
-        "EngineVersion": {"Ref": "DbVersion"},
-        "DBName": {"Ref": "DbName"},
-        "MasterUsername": {"Ref": "DbUser"},
-        "MasterUserPassword": {"Ref": "DbPassword"},
         "MultiAZ": {"Ref": "MultiAvailabilityZone"},
         "PubliclyAccessible": false,
         "Port": {"Ref": "TcpPort"},
         "StorageEncrypted": false,
-        "CopyTagsToSnapshot": true,
         "VPCSecurityGroups": [ {"Ref": "RDSAccessSecurityGroup"} ],
         "Tags" : [
           {
@@ -178,6 +144,8 @@
       }
     }
 
+
+
   },
   "Metadata": {
     "AWS::CloudFormation::Interface" : {
@@ -190,6 +158,7 @@
           "Label" : { "default" : "Subnets"},
           "Parameters" : [
             "VPCStackName",
+            "SnapshotArn",
             "NetworkAccessIP",
             "ConfigureDns",
             "InstanceType"
@@ -198,10 +167,12 @@
         }
       ],
       "ParameterLabels" : {
+        "SnapshotArn": { "default" : "ARN of the RDS Snapshot" },
         "NetworkAccessIP": { "default" : "Network to allow SSH access" },
         "VPCStackName": { "default" : "VPC Stack to build on" },
         "ConfigureDns": { "default" : "Update Route53" }
       }
     }
   }
+
 }
