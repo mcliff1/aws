@@ -1,7 +1,7 @@
-{ "AWSTemplateFormatVersion" : "2010-09-09",
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
 	"Description" : "Template will build SLS workstation, can be used in all stages has SLS and REACT frameworks installed",
-	"Parameters" :
-	{
+	"Parameters" : {
 		"Project" : {
 			"Description" : "Project Name",
 			"Type" : "String",
@@ -19,6 +19,10 @@
 			"Description" : "Subnet to place instance in (must be in selected VPC)",
 			"Type" : "AWS::EC2::Subnet::Id"
 		},
+		"InternalAccessSecurityGroup" : {
+			"Description" : "allows host access to instances",
+			"Type" : "AWS::EC2::SecurityGroup::Id"
+		},
 		"DomainName" : {
 			"Description" : "(optional) Domain to add",
 			"Type" : "String",
@@ -30,21 +34,25 @@
 			"Default" : "sls-workstation"
 		}
 	},
-	"Conditions" :
-	{
+	"Conditions" : {
 		"CreateDnsResources" : {"Fn::Not" : [{ "Fn::Equals" : [{"Ref" : "DomainName"}, "nodomainname"] }] }
 	},
-	"Resources" :
-	{
+	"Resources" : {
 		"EC2Instance": {
 			"Type" : "AWS::EC2::Instance",
-			"DependsOn": "SG",
+			"DependsOn": ["Ec2SecurityGroup", "InstanceProfile"],
 			"Properties" : {
 				"ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
 				"KeyName" : { "Ref" : "Ec2KeyPair" },
 				"InstanceType" : "t2.micro",
-				"IamInstanceProfile" : { "Ref" : "InstanceRole" },
-				"SecurityGroups" : [ {"Ref" : "SG" } ],
+				"IamInstanceProfile" : { "Ref" : "InstanceProfile" },
+				"NetworkInterfaces": [{
+					"GroupSet" : [ {"Ref": "Ec2SecurityGroup"} ],
+					"AssociatePublicIpAddress": true,
+					"DeviceIndex" : "0",
+					"DeleteOnTermination" :true,
+					"SubnetId" : { "Ref": "SubnetId"}
+				}],
 				"Tags" : [
 					{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-ec2"]]}},
 					{ "Key" : "Project", "Value" : {"Ref": "Project"} }
@@ -113,7 +121,7 @@
 				}
 			},
 
-			"InstanceRole": {
+			"InstanceProfile": {
 				"Type" : "AWS::IAM::InstanceProfile",
 				"Properties" : {
 					"Path" : "/",
@@ -124,16 +132,16 @@
 			},
 
 
-			"SG": {
+			"Ec2SecurityGroup": {
 				"Type" : "AWS::EC2::SecurityGroup",
 				"Properties" : {
-					"GroupDescription" : "SLS Workstation CFN generated group" ,
+					"GroupDescription" : "Allows access to ports 22, 3000(REACT), 8000" ,
 					"SecurityGroupIngress" : [
 						{ "Description" : "Access to SSH", "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
 						{ "Description" : "REACT dev port", "IpProtocol" : "tcp", "FromPort" : "3000", "ToPort" : "3000", "CidrIp" : "0.0.0.0/0" },
 						{ "Description" : "http test port", "IpProtocol" : "tcp", "FromPort" : "8000", "ToPort" : "8000", "CidrIp" : "0.0.0.0/0" }
 					],
-					"VpcId" : {"Ref" : "VPC"},
+					"VpcId" : {"Ref": "VPC"},
 					"Tags" : [
 						{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-SecurityGroup"]]}},
 						{ "Key" : "Project", "Value" : {"Ref": "Project"} }
@@ -162,8 +170,7 @@
 			}
 
 		},
-		"Mappings" :
-		{
+		"Mappings" : {
 			"AWSRegionArch2AMI" : {
 				"us-east-1"        : {"HVM64" : "ami-97785bed"},
 				"us-west-2"        : {"HVM64" : "ami-f2d3638a"},

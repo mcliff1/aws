@@ -40,7 +40,7 @@ aws cloudformation create-stack --stack-name <stackName> --template-body file://
 
 #### VPC
 <table width="100%">
-<tr><th><a href="#">vpc.json</a></th></tr>
+<tr><th><a href="https://github.com/mcliff1/aws/blob/master/vpc.json">vpc.json</a></th></tr>
 <tr><td>
 The *vpc.json* Cloud Formation template will build out a VPC with private and public subnets. This provides outputs for subnet and security information that other scripts may leverage. This provides the basis for other templates.
 
@@ -56,7 +56,8 @@ The *vpc.json* Cloud Formation template will build out a VPC with private and pu
 </ul>
 <h6>Public S3 Url</h6>
 <ol><li>https://s3.amazonaws.com/mcliff/cliffconsulting.com/</li></ol>
-
+<h6>TODO</h6>
+set up [VPC end points](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-endpoints.html)
 </td></tr>
 </table>
 
@@ -80,7 +81,10 @@ The <i>bastion.json</i> Cloud Formation template will build create a bastion hos
 <h6>Outputs</h6>
 <h6>Public S3 Url</h6>
 <ol><li>https://s3.amazonaws.com/mcliff/cliffconsulting.com/</li></ol>
-
+<h6>TODO</h6>
+<ul>
+<li>setup EIP (it's free as long as VM is running)</li>
+</ul>
 </td></tr>
 </table>
 
@@ -144,6 +148,8 @@ Creates a Lambda function that is generic.
 <tr><th><a href="#restitemapi">Item REST API</a></th></tr>
 <tr><td>
 Creates RESTful endpoint for **item** object, which is a generic *JSON* object.  The key is **ItemKey**, this will automatically be generated if not present.
+
+<a href="https://restdb.io/docs/rest-api#restdb">ref</a>
 
 <h6>API</h6>
 <ol>
