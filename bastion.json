@@ -13,7 +13,7 @@
     },
     "Ec2KeyPair" : {
       "Description" : "Key Pair to use to access the EC2 instance",
-      "Type" : "String"
+      "Type" : "AWS::EC2::KeyPair::KeyName"
     },
     "ConfigureDns" : {
       "Description" : "Configure Route 53 DNS Alias for RDS (ensure it does not already exist)",

@@ -1,14 +1,20 @@
 # AWS Resources
 Collection of Amazon Web Services Cloud resources and Utilities
 
+### Contents
+* [SLS workstation](#workstation)
+* [VPC](#vpc)
+
 ## Cloud Formation
 
 These templates are based natively in Cloud Formation, each on should have a clearly defined **Parameters** section and **Outputs** section.
 
+#### Workstation
 <table width="100%">
-<tr><th><a href="#">cfn-ec2workstation.json</a></th></tr>
+<tr><th><a href="#">ec2-slsworkstation.json</a></th></tr>
 <tr><td>
-The *cfn-ec2workstation.json* Cloud Formation template will build out a Serverless workstation with NodeJS, NPM, SLS, and REACT frameworks install. You MUST define the parameters **myKeyPair** (name of your SSH Key to access the instance), and optionally **stage** (dev or prod) and **myDomain** (if you have a hosted domain will set a convenience URL *bot-{stage}.{domainname}*)
+The <i>cfn-ec2workstation.json</i> Cloud Formation template will build out a Serverless workstation with NodeJS, NPM, SLS, and REACT frameworks install.
+
 
 <code>
 aws cloudformation create-stack --stack-name <stackName> --template-body file://cfn-ec2workstation.json --parameters ParameterKey=myKeyPair
@@ -32,12 +38,11 @@ aws cloudformation create-stack --stack-name <stackName> --template-body file://
 
 
 
-
-
+#### VPC
 <table width="100%">
 <tr><th><a href="#">vpc.json</a></th></tr>
 <tr><td>
-The *vpc.json* Cloud Formation template will build out a VPC with private and public subnets. This provides outputs for subnet and security information that other scripts may leverage.
+The *vpc.json* Cloud Formation template will build out a VPC with private and public subnets. This provides outputs for subnet and security information that other scripts may leverage. This provides the basis for other templates.
 
 <h6>Create Details</h6>
 <h6>Parameters</h6>
@@ -45,6 +50,10 @@ The *vpc.json* Cloud Formation template will build out a VPC with private and pu
 <li>myDomain (optional)</li>
 </ol>
 <h6>Outputs</h6>
+<ul>
+<li><i>{StackName}-VpcId</i></li>
+<li><i>{StackName}-PublicSubnet1Id</i></li>
+</ul>
 <h6>Public S3 Url</h6>
 <ol><li>https://s3.amazonaws.com/mcliff/cliffconsulting.com/</li></ol>
 
@@ -54,16 +63,18 @@ The *vpc.json* Cloud Formation template will build out a VPC with private and pu
 
 
 
-
+#### Bastion
 <table width="100%">
-<tr><th><a href="#">bastion.json</a></th></tr>
+<tr><th><a href="https://github.com/mcliff1/aws/blob/master/bastion.json">bastion.json</a></th></tr>
 <tr><td>
-The *bastion.json* Cloud Formation template will build create a bastion host on a VPC from the template.
+The <i>bastion.json</i> Cloud Formation template will build create a bastion host on a VPC from the template.
 
 <h6>Create Details</h6>
+<h6>Requires</h6>
+[VPC.json](#vpc)
 <h6>Parameters</h6>
 <ol>
-<li>Ec2KeyPair</li>
+<li>VPC Stack Name</li>
 <li>myDomain (optional)</li>
 </ol>
 <h6>Outputs</h6>
@@ -74,6 +85,7 @@ The *bastion.json* Cloud Formation template will build create a bastion host on 
 </table>
 
 
+#### RDS Postgres
 <table width="100%">
 <tr><th><a href="#">rds-postgres.json</a></th></tr>
 <tr><td>
@@ -95,6 +107,7 @@ The *rds-postgres.json* Cloud Formation template will build create a PostgreSQL 
 
 
 ## Serverless
+[back to top](#aws_resources)
 These use the <a href="https://serverless.com">Serverless</a> framework, which is designed to provide abstraction to the underlying Cloud provider (AWS in our case).
 
 
