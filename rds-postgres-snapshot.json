@@ -110,9 +110,9 @@
       "Properties": {
         "DBSubnetGroupDescription" : {"Fn::Join" : ["", ["RDS Subnet group for ", {"Ref": "AWS::StackName"} ]]},
         "SubnetIds": [
-          {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-PublicSubnet1Id"}},
-          {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-PublicSubnet2Id"}},
-          {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-PublicSubnet3Id"}}
+          {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-PrivateSubnet1Id"}},
+          {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-PrivateSubnet2Id"}},
+          {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-PrivateSubnet3Id"}}
         ]
       }
     },
@@ -130,7 +130,10 @@
         "PubliclyAccessible": false,
         "Port": {"Ref": "TcpPort"},
         "StorageEncrypted": false,
-        "VPCSecurityGroups": [ {"Ref": "RDSAccessSecurityGroup"} ],
+        "VPCSecurityGroups": [
+          {"Ref": "RDSAccessSecurityGroup"},
+          {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-SecurityGroupId"}}
+        ],
         "Tags" : [
           {
             "Key": "Name",
@@ -172,6 +175,23 @@
         "VPCStackName": { "default" : "VPC Stack to build on" },
         "ConfigureDns": { "default" : "Update Route53" }
       }
+    }
+  },
+  "Outputs": {
+    "DbUser" : {
+      "Description" : "Database Username",
+      "Value" : { "Ref" : "DbUser" },
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-DbUser"}}
+    },
+    "DbName" : {
+      "Description" : "Database Name",
+      "Value" : { "Ref" : "DbName" },
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-DbName"}}
+    },
+    "DbHost" : {
+      "Description" : "Database Host Endpoint",
+      "Value" : { "Fn::GetAtt" : [ "DbInstance", "Endpoint.Address" ] },
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-DbHost"}}
     }
   }
 

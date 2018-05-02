@@ -337,7 +337,7 @@
       "DependsOn" : "VPC",
       "Properties" : {
         "VpcId": {"Ref": "VPC"},
-        "GroupDescription" : "SSH Access to Bastion Instance",
+        "GroupDescription" : "Assign this to internal resources such as RDS or EC2 to give access in the private net",
         "Tags" : [
           {
             "Key": "Name",
@@ -387,6 +387,21 @@
       "Description" : "Public Subnet in AZ3",
       "Value" : {"Ref": "PublicSubnet3"},
       "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicSubnet3Id"}}
+    },
+    "PrivateSubnet1" : {
+      "Description" : "Private Subnet in AZ1",
+      "Value" : {"Ref": "PrivateSubnet1"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PrivateSubnet1Id"}}
+    },
+    "PrivateSubnet2" : {
+      "Description" : "Private Subnet in AZ2",
+      "Value" : {"Ref": "PrivateSubnet2"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PrivateSubnet2Id"}}
+    },
+    "PrivateSubnet3" : {
+      "Description" : "Private Subnet in AZ3",
+      "Value" : {"Ref": "PrivateSubnet3"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PrivateSubnet3Id"}}
     },
     "InternalAccessSecurityGroup" : {
       "Description" : "Security Group that allows instance to instance connection",

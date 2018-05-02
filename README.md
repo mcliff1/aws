@@ -2,23 +2,21 @@
 Collection of Amazon Web Services Cloud resources and Utilities
 
 ### Contents
-* [SLS workstation](#workstation)
+* [SLS workstation](#sls_workstation)
 * [VPC](#vpc)
+* [References](#references)
 
 ## Cloud Formation
 
 These templates are based natively in Cloud Formation, each on should have a clearly defined **Parameters** section and **Outputs** section.
 
-#### Workstation
+#### SLS Workstation
 <table width="100%">
 <tr><th><a href="#">ec2-slsworkstation.json</a></th></tr>
 <tr><td>
 The <i>cfn-ec2workstation.json</i> Cloud Formation template will build out a Serverless workstation with NodeJS, NPM, SLS, and REACT frameworks install.
 
 
-<code>
-aws cloudformation create-stack --stack-name <stackName> --template-body file://cfn-ec2workstation.json --parameters ParameterKey=myKeyPair
-</code>
 <h6>Create Details</h6>
 <h6>Parameters</h6>
 <ol>
@@ -84,6 +82,7 @@ The <i>bastion.json</i> Cloud Formation template will build create a bastion hos
 <h6>TODO</h6>
 <ul>
 <li>setup EIP (it's free as long as VM is running)</li>
+<li>rename export name of internal access security group</li>
 </ul>
 </td></tr>
 </table>
@@ -237,3 +236,9 @@ Next Steps -
 Start flushing out changes to the REACT side of the app
 </td></tr>
 </table>
+
+
+## References
+[back to top](#contents)
+
+* [AWS Bastion Host](https://docs.aws.amazon.com/quickstart/latest/linux-bastion/architecture.html)

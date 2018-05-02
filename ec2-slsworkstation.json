@@ -1,6 +1,6 @@
 {
 	"AWSTemplateFormatVersion" : "2010-09-09",
-	"Description" : "Template will build SLS workstation, can be used in all stages has SLS and REACT frameworks installed",
+	"Description" : "Template will build aSLS workstation, can be used in all regions has SLS and REACT frameworks installed",
 	"Parameters" : {
 		"Project" : {
 			"Description" : "Project Name",
@@ -19,10 +19,6 @@
 			"Description" : "Subnet to place instance in (must be in selected VPC)",
 			"Type" : "AWS::EC2::Subnet::Id"
 		},
-		"InternalAccessSecurityGroup" : {
-			"Description" : "allows host access to instances",
-			"Type" : "AWS::EC2::SecurityGroup::Id"
-		},
 		"DomainName" : {
 			"Description" : "(optional) Domain to add",
 			"Type" : "String",
@@ -32,6 +28,15 @@
 			"Description" : "(optional) Host to add",
 			"Type" : "String",
 			"Default" : "sls-workstation"
+		},
+		"NetworkAccessIP" : {
+			"Description": "Source that has SSH access to the bastion host. (i.e. 50.32.108.38/32)",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x."
 		}
 	},
 	"Conditions" : {
@@ -57,21 +62,23 @@
 					{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-ec2"]]}},
 					{ "Key" : "Project", "Value" : {"Ref": "Project"} }
 				],
-				"UserData" : { "Fn::Base64" : { "Fn::Join" : ["",[
-					"#!/bin/bash", "\n",
-					"yum update -y", "\n",
-					"yum install -y git docker tmux jq", "\n",
-					"curl https://bootstrap.pypa.io/get-pip.py | /usr/bin/python2.7", "\n",
-					"curl https://rpm.nodesource.com/setup_8.x | bash -", "\n",
-					"yum install -y nodejs", "\n",
-					"npm install -g serverless", "\n",
-					"npm install -g yarn", "\n",
-					"npm install -g aws-amplify", "\n",
-					"npm install -g create-react-app", "\n",
-					"pip install -q boto3", "\n",
-					"pip install -q pylint", "\n",
-					"usermod -a -G docker ec2-user", "\n",
-					"date > bootstrap.log", "\n"]]}
+				"UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n",[
+					"#!/bin/bash",
+					"yum update -y",
+					"yum install -y git docker tmux jq ca-certificates cloud-init",
+					"curl https://bootstrap.pypa.io/get-pip.py | /usr/bin/python2.7",
+					"curl https://rpm.nodesource.com/setup_8.x | bash -",
+					"yum install -y nodejs",
+					"npm install -g serverless",
+					"npm install -g yarn",
+					"npm install -g aws-amplify",
+					"npm install -g create-react-app",
+					"pip install -q boto3",
+					"pip install -q numpy",
+					"pip install -q pylint",
+					"usermod -a -G docker ec2-user",
+					"service docker start",
+					"date > bootstrap.log"]]}
 				}
 			}
 		},
@@ -109,7 +116,9 @@
 											"cognito-idp:UpdateUserPoolClient",
 											"cognito-idp:DeleteUserPoolClient",
 											"route53:ChangeResourceRecordSets",
-											"cloudformation:*"
+											"cloudformation:*",
+											"logs:*",
+											"sns:*"
 										],
 										"Resource" : "*",
 										"Effect" : "Allow"
@@ -148,8 +157,6 @@
 					]
 				}
 			},
-
-
 
 
 
@@ -200,18 +207,27 @@
 						"Parameters" : [ "Project" ]
 					},
 					{
-						"Label" : { "default" : "Subnets"},
+						"Label" : { "default" : "Network Placement"},
 						"Parameters" : [
 							"Ec2KeyPair",
-							"HostName",
-							"DomainName",
-							"InstanceType"
+							"VPC",
+							"SubnetId",
+							"NetworkAccessIP"
 						]
-
+					},
+					{
+						"Label" : { "default" : "DNS Configuration"},
+						"Parameters" : [
+							"HostName",
+							"DomainName"
+						]
 					}
 				],
 				"ParameterLabels" : {
 					"Ec2KeyPair": { "default" : "Key Pair to allow SSH access" },
+					"VPC": { "default" : "VPC to place instance in" },
+					"SubnetId": { "default" : "Subnet to place instance" },
+					"NetworkAccessIP": { "default" : "Network with SSH access" },
 					"DomainName": { "default" : "Domainname to use (optional)" },
 					"HostName": { "default" : "Hostname to use (optional)" }
 				}
@@ -222,6 +238,11 @@
 				"Description" : "Public IP Address",
 				"Value" : { "Fn::GetAtt" : ["EC2Instance", "PublicIp"] },
 				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicIp"}}
+			},
+			"PublicDns" : {
+				"Description" : "Public DNS Address",
+				"Value" : { "Ref" : "DnsRecord" },
+				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicDns"}}
 
 			}
 		}

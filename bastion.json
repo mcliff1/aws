@@ -33,7 +33,7 @@
     "InstanceType": {
       "Description": "Select Instance Type.",
       "Type": "String",
-      "Default": "t2.small",
+      "Default": "t2.micro",
       "AllowedValues": [
         "t2.nano",
         "t2.micro",
@@ -89,10 +89,6 @@
     "ConfigureRoute53" : {"Fn::Equals": [ {"Ref": "ConfigureDns"}, "true"]}
   },
   "Resources": {
-
-
-
-
     "BastionSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties" : {
@@ -139,7 +135,8 @@
         "InstanceType" : {"Ref": "InstanceType"},
         "KeyName" : {"Ref": "Ec2KeyPair"},
         "SecurityGroupIds": [
-          {"Ref" : "BastionSecurityGroup"}
+          {"Ref" : "BastionSecurityGroup"},
+          {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-SecurityGroupId"}}
         ],
         "SubnetId" : {"Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-PublicSubnet1Id"}},
         "Tags" : [
@@ -151,9 +148,15 @@
             "Key": "Project",
             "Value": {"Ref": "Project"}
           }
-        ]
-
-
+        ],
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n",[
+          "#!/bin/bash",
+          "yum update -y",
+          "yum install -y git docker tmux jq",
+          "usermod -a -G docker ec2-user",
+          "service docker start",
+          "date > bootstrap.log"]]}
+        }
       }
     }
   },
