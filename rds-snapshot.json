@@ -178,15 +178,15 @@
     }
   },
   "Outputs": {
-    "DbUser" : {
-      "Description" : "Database Username",
-      "Value" : { "Ref" : "DbUser" },
-      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-DbUser"}}
+    "DbId" : {
+      "Description" : "Database Id",
+      "Value" : { "Ref" : "DbInstance" },
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-DbId"}}
     },
-    "DbName" : {
-      "Description" : "Database Name",
-      "Value" : { "Ref" : "DbName" },
-      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-DbName"}}
+    "DbPort" : {
+      "Description" : "Database Host Port",
+      "Value" : { "Fn::GetAtt" : [ "DbInstance", "Endpoint.Port" ] },
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-DbPort"}}
     },
     "DbHost" : {
       "Description" : "Database Host Endpoint",

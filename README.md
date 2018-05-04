@@ -2,13 +2,19 @@
 Collection of Amazon Web Services Cloud resources and Utilities
 
 ### Contents
-* [SLS workstation](#sls_workstation)
+* [Cloud Formation](#Cloud_Formation)
 * [VPC](#vpc)
 * [References](#references)
 
 ## Cloud Formation
 
 These templates are based natively in Cloud Formation, each on should have a clearly defined **Parameters** section and **Outputs** section.
+* [ec2-slsworkstation.json](#SLS_Workstation) - creates EC2 REACT/SLS Dev workstation in the selected VPC and Subnet
+* [vpc.json](#VPC) - creates a VPC in the region imported into with public and private subnets in 3 availability zones
+* [bastion.json](#Bastion) - adds a bastion host (uses vpc.json)
+* [rds-snapshot.json](#RDS_Snapshot) - restores a RDS database from snapshot (uses vpc.json)
+* [rds-postgres.json](#RDS_Postgres) - creates a new RDS PostgreSQL database (uses vpc.json)
+
 
 #### SLS Workstation
 <table width="100%">
@@ -40,22 +46,34 @@ The <i>cfn-ec2workstation.json</i> Cloud Formation template will build out a Ser
 <table width="100%">
 <tr><th><a href="https://github.com/mcliff1/aws/blob/master/vpc.json">vpc.json</a></th></tr>
 <tr><td>
-The *vpc.json* Cloud Formation template will build out a VPC with private and public subnets. This provides outputs for subnet and security information that other scripts may leverage. This provides the basis for other templates.
+The *vpc.json* Cloud Formation template will build out a VPC with private and public subnets. This provides outputs for subnet and security information that other scripts may leverage. This provides the basis for other templates. 
 
 <h6>Create Details</h6>
 <h6>Parameters</h6>
 <ol>
-<li>myDomain (optional)</li>
+<li>VPC Stack Name - referenced by other stacks</li>
+<li>Project - used to Tag associated resources</li>
+<li>VPC Subnet IPv4 CIDR range</li>
+<li>Public Subnet 1 IPv4 CIDR range</li>
+<li>Public Subnet 2 IPv4 CIDR range</li>
+<li>Public Subnet 3 IPv4 CIDR range</li>
+<li>Private Subnet 1 IPv4 CIDR range</li>
+<li>Private Subnet 2 IPv4 CIDR range</li>
+<li>Private Subnet 3 IPv4 CIDR range</li>
 </ol>
 <h6>Outputs</h6>
 <ul>
 <li><i>{StackName}-VpcId</i></li>
 <li><i>{StackName}-PublicSubnet1Id</i></li>
+<li><i>{StackName}-PublicSubnet2Id</i></li>
+<li><i>{StackName}-PublicSubnet3Id</i></li>
+<li><i>{StackName}-PrivateSubnet1Id</i></li>
+<li><i>{StackName}-PrivateSubnet2Id</i></li>
+<li><i>{StackName}-PrivateSubnet3Id</i></li>
+<li><i>{StackName}-TopicArn</i> SNS topic that can be used for events in this VPC</li>
 </ul>
-<h6>Public S3 Url</h6>
-<ol><li>https://s3.amazonaws.com/mcliff/cliffconsulting.com/</li></ol>
 <h6>TODO</h6>
-set up [VPC end points](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-endpoints.html)
+set up [VPC end points](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-endpoints.html); also what kind of termination protection/monitoring framework
 </td></tr>
 </table>
 
@@ -69,23 +87,62 @@ set up [VPC end points](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/v
 The <i>bastion.json</i> Cloud Formation template will build create a bastion host on a VPC from the template.
 
 <h6>Create Details</h6>
+Creates EC2 instance and security group, the new security group allows connectivity from outside the VPC, the instance also gets the security group that allows internal access to all resources (private and public) in the specified VPC.
+
 <h6>Requires</h6>
 [VPC.json](#vpc)
 <h6>Parameters</h6>
 <ol>
-<li>VPC Stack Name</li>
-<li>myDomain (optional)</li>
+<li>Stack Name - referenced by other stacks</li>
+<li>Project - used to Tag associated resources</li>
+<li>VPC StackName</i> - from <a href="#VPC">VPC</a> stack</li>
+<li>Network to allow SSH access from</li>
+<li>Key Pair to use for SSH access</li>
+<li>Update Route53 -<b>TODO not implemented</b></li>
+<li>Instance Type</li>
 </ol>
 <h6>Outputs</h6>
-<h6>Public S3 Url</h6>
-<ol><li>https://s3.amazonaws.com/mcliff/cliffconsulting.com/</li></ol>
 <h6>TODO</h6>
 <ul>
 <li>setup EIP (it's free as long as VM is running)</li>
 <li>rename export name of internal access security group</li>
+<li>add the DNS update</li>
 </ul>
 </td></tr>
 </table>
+
+
+#### RDS Snapshot
+<table width="100%">
+<tr><th><a href="#">rds-snapshot.json</a></th></tr>
+<tr><td>
+The *rds-snapshot.json* Cloud Formation template will build create a RDS instance in the VPC, from a snapshot.
+
+<h6>Create Details</h6>
+Can restore any RDS DB instance
+
+<h6>Parameters</h6>
+<ol>
+<li>Stack Name - referenced by other stacks</li>
+<li>Project - used to Tag associated resources</li>
+<li>VPC StackName</i> - from <a href="#VPC">VPC</a> stack</li>
+<li>ARN of the snapshot</li>
+<li>Update Route53 -<b>TODO not implemented</b></li>
+<li>Instance Type</li>
+<li>AutoMinorVersionUpgrade</li>
+<li>MultiAvailabilityZone</li>
+<li>TcpPort</li>
+</ol>
+<h6>Outputs</h6>
+<ol>
+<li><i>{StackName}-DbId</i></li>
+<li><i>{StackName}-DbHost</i></li>
+<li><i>{StackName}-DbPort</i></li>
+</ol>
+</td></tr>
+</table>
+
+
 
 
 #### RDS Postgres
@@ -95,12 +152,26 @@ The <i>bastion.json</i> Cloud Formation template will build create a bastion hos
 The *rds-postgres.json* Cloud Formation template will build create a PostgreSQL instance in the VPC.
 
 <h6>Create Details</h6>
+Builds a new RDS PostgreSQL database in the Private Subnets of the VPC.
+
 <h6>Parameters</h6>
 <ol>
+<li>Stack Name - referenced by other stacks</li>
+<li>Project - used to Tag associated resources</li>
+<li>VPC StackName</i> - from <a href="#VPC">VPC</a> stack</li>
+<li>Update Route53 -<b>TODO not implemented</b></li>
+<li>Instance Type</li>
+<li>AllocatedStorage</li>
+<li>AutoMinorVersionUpgrade</li>
+<li>MultiAvailabilityZone</li>
+<li>DbName</li>
+<li>DbUser</li>
+<li>DbPassword</li>
+<li>MultiAvailabilityZone</li>
+<li>DbVersion</li>
+<li>TcpPort</li>
 </ol>
 <h6>Outputs</h6>
-<h6>Public S3 Url</h6>
-<ol><li>https://s3.amazonaws.com/mcliff/cliffconsulting.com/</li></ol>
 
 </td></tr>
 </table>

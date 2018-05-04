@@ -182,7 +182,7 @@
       "ParameterLabels" : {
         "Ec2KeyPair": { "default" : "Key Pair for EC2 instance" },
         "NetworkAccessIP": { "default" : "Network to allow SSH access" },
-        "VPCStackName": { "default" : "VPC Stack to build on" },
+        "VPCStackName": { "default" : "VPC StackName to build on" },
         "ConfigureDns": { "default" : "Update Route53" }
       }
     }

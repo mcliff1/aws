@@ -358,6 +358,14 @@
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {"Ref" : "InternalAccessSecurityGroup"}
       }
+    },
+    "SNSTopic" : {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "TopicName": {"Fn::Sub": "${AWS::StackName}-GeneralTopic" },
+        "DisplayName": {"Fn::Sub" : "General Announcments For ${AWS::StackName} network"}
+      }
+
     }
 
 
@@ -402,6 +410,11 @@
       "Description" : "Private Subnet in AZ3",
       "Value" : {"Ref": "PrivateSubnet3"},
       "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PrivateSubnet3Id"}}
+    },
+    "SNSTopic" : {
+      "Description" : "SNS Topic Created",
+      "Value" : {"Ref": "SNSTopic"},
+      "Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-TopicArn"}}
     },
     "InternalAccessSecurityGroup" : {
       "Description" : "Security Group that allows instance to instance connection",
