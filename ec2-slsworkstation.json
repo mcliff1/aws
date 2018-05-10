@@ -238,12 +238,6 @@
 				"Description" : "Public IP Address",
 				"Value" : { "Fn::GetAtt" : ["EC2Instance", "PublicIp"] },
 				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicIp"}}
-			},
-			"PublicDns" : {
-				"Description" : "Public DNS Address",
-				"Value" : { "Ref" : "DnsRecord" },
-				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicDns"}}
-
 			}
 		}
 
