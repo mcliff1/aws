@@ -31,12 +31,12 @@
 		},
 		"NetworkAccessIP" : {
 			"Description": "Source that has SSH access to the bastion host. (i.e. 50.32.108.38/32)",
-      "Type": "String",
-      "MinLength": "9",
-      "MaxLength": "18",
-      "Default": "0.0.0.0/0",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x."
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"Default": "0.0.0.0/0",
+			"AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+			"ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x."
 		}
 	},
 	"Conditions" : {
@@ -45,102 +45,44 @@
 	"Resources" : {
 		"EC2Instance": {
 			"Type" : "AWS::EC2::Instance",
-			"DependsOn": ["Ec2SecurityGroup", "InstanceProfile"],
+			"DependsOn": "Ec2SecurityGroup",
 			"Properties" : {
 				"ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
 				"KeyName" : { "Ref" : "Ec2KeyPair" },
 				"InstanceType" : "t2.micro",
-				"IamInstanceProfile" : { "Ref" : "InstanceProfile" },
-				"NetworkInterfaces": [{
+				"NetworkInterfaces": [
+					{
 					"GroupSet" : [ {"Ref": "Ec2SecurityGroup"} ],
 					"AssociatePublicIpAddress": true,
 					"DeviceIndex" : "0",
-					"DeleteOnTermination" :true,
-					"SubnetId" : { "Ref": "SubnetId"}
-				}],
-				"Tags" : [
-					{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-ec2"]]}},
-					{ "Key" : "Project", "Value" : {"Ref": "Project"} }
+					"SubnetId" : { "Ref": "SubnetId" },
+					"DeleteOnTermination" :true
+					}
 				],
+				"Tags" : [
+						{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-ec2"]]}},
+						{ "Key" : "Project", "Value" : {"Ref": "Project"} }
+					],
 				"UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n",[
-					"#!/bin/bash",
-					"yum update -y",
-					"yum install -y git docker tmux jq ca-certificates cloud-init",
-					"curl https://bootstrap.pypa.io/get-pip.py | /usr/bin/python2.7",
-					"curl https://rpm.nodesource.com/setup_8.x | bash -",
-					"yum install -y nodejs",
-					"npm install -g serverless",
-					"npm install -g yarn",
-					"npm install -g aws-amplify",
-					"npm install -g create-react-app",
-					"pip install -q boto3",
-					"pip install -q numpy",
-					"pip install -q pylint",
-					"usermod -a -G docker ec2-user",
-					"service docker start",
-					"date > bootstrap.log"]]}
-				}
-			}
-		},
-
-
-
-
-
-		"SLSRole": {
-			"Type" : "AWS::IAM::Role",
-			"Properties" : {
-				"AssumeRolePolicyDocument" : {
-					"Version" : "2012-10-17",
-					"Statement" : [ {
-						"Effect" : "Allow",
-						"Principal" : {
-							"Service" : [ "ec2.amazonaws.com" ]
-						},
-						"Action" : [ "sts:AssumeRole" ]
-						} ]
-					},
-					"Path" : "/",
-					"Policies" : [
-						{
-							"PolicyName" : "sls-iam-instance-policy",
-							"PolicyDocument": {
-								"Version" : "2012-10-17",
-								"Statement" : [
-									{
-										"Action" : [
-											"cognito-idp:CreateUserPool",
-											"cognito-idp:UpdateUserPool",
-											"cognito-idp:DeleteUserPool",
-											"cognito-idp:CreateUserPoolClient",
-											"cognito-idp:UpdateUserPoolClient",
-											"cognito-idp:DeleteUserPoolClient",
-											"route53:ChangeResourceRecordSets",
-											"cloudformation:*",
-											"logs:*",
-											"sns:*"
-										],
-										"Resource" : "*",
-										"Effect" : "Allow"
-									}
-								]
-							}
-						}
-					]
+						"#!/bin/bash",
+						"yum update -y",
+						"yum install -y git docker tmux jq ca-certificates cloud-init",
+						"curl https://bootstrap.pypa.io/get-pip.py | /usr/bin/python2.7",
+						"curl https://rpm.nodesource.com/setup_8.x | bash -",
+						"yum install -y nodejs",
+						"npm install -g serverless",
+						"npm install -g yarn",
+						"npm install -g aws-amplify",
+						"npm install -g create-react-app",
+						"pip install -q boto3",
+						"pip install -q numpy",
+						"pip install -q pylint",
+						"usermod -a -G docker ec2-user",
+						"service docker start",
+						"date > bootstrap.log"]]}
+					}
 				}
 			},
-
-			"InstanceProfile": {
-				"Type" : "AWS::IAM::InstanceProfile",
-				"Properties" : {
-					"Path" : "/",
-					"Roles" : [
-						{ "Ref" : "SLSRole" }
-					]
-				}
-			},
-
-
 			"Ec2SecurityGroup": {
 				"Type" : "AWS::EC2::SecurityGroup",
 				"Properties" : {
@@ -238,7 +180,14 @@
 				"Description" : "Public IP Address",
 				"Value" : { "Fn::GetAtt" : ["EC2Instance", "PublicIp"] },
 				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicIp"}}
+			},
+			"PublicDns" : {
+				"Description" : "Public IP Address",
+				"Value" : { "Fn::GetAtt" : ["EC2Instance", "DnsRecord"] },
+				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicDns"}},
+				"Condition" : "CreateDnsResources"
 			}
+
 		}
 
 	}
