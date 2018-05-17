@@ -183,7 +183,7 @@
 			},
 			"PublicDns" : {
 				"Description" : "Public IP Address",
-				"Value" : { "Fn::GetAtt" : ["EC2Instance", "DnsRecord"] },
+				"Value" : { "Ref" : "DnsRecord" },
 				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicDns"}},
 				"Condition" : "CreateDnsResources"
 			}
