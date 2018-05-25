@@ -1,0 +1,70 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Creates and Reads sample properties from ssm",
+  "Parameters" : {
+    "Project" : {
+      "Description" : "Enter Project Name",
+      "Type" : "String",
+      "Default" : "SSM Demo"
+    },
+    "MyProperty1" : {
+      "Description" : "First Property to save",
+      "Type" : "String"
+    },
+    "MyProperty2" : {
+      "Description" : "Next Property to save",
+      "Type" : "String"
+    }
+  },
+  "Resources": {
+    "TheProperty1": {
+      "Type" : "AWS::SSM::Parameter",
+      "Properties" : {
+        "Name" : "/demo/property1",
+        "Description" : "demo for one property",
+        "Type" : "String",
+        "Value" : { "Ref" : "MyProperty1" },
+      }
+    },
+    "TheProperty2": {
+      "Type" : "AWS::SSM::Parameter",
+      "Properties" : {
+        "Name" : "/demo/property2",
+        "Description" : "demo for two property",
+        "Type" : "String",
+        "Value" : { "Ref" : "MyProperty2" },
+      }
+    }
+
+
+
+  },
+  "Outputs": {
+    "Project" : {
+      "Description" : "The Project Name",
+      "Value" : {"Ref": "Project"}
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+          {
+            "Label" : { "default" : "Project Information"},
+            "Parameters" : [ "Project" ]
+          },
+          {
+            "Label" : { "default" : "Properties"},
+            "Parameters" : [
+              "MyProperty1",
+              "MyProperty2"
+            ]
+
+          }
+      ],
+      "ParameterLabels" : {
+        "MyProperty1": { "default" : "Property One" },
+        "MyProperty2": { "default" : "Property Two" }
+      }
+    }
+  }
+}
