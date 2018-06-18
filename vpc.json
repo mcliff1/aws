@@ -447,7 +447,10 @@
         "VPCCidrBlock": { "default" : "VPC Subnet" },
         "PublicSubnetCidrBlock1": { "default" : "Public Subnet 1" },
         "PublicSubnetCidrBlock2": { "default" : "Public Subnet 2" },
-        "PublicSubnetCidrBlock3": { "default" : "Public Subnet 3" }
+        "PublicSubnetCidrBlock3": { "default" : "Public Subnet 3" },
+        "PrivateSubnetCidrBlock1": { "default" : "Private Subnet 1" },
+        "PrivateSubnetCidrBlock2": { "default" : "Private Subnet 2" },
+        "PrivateSubnetCidrBlock3": { "default" : "Private Subnet 3" }
       }
     }
   }
