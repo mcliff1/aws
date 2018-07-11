@@ -1,0 +1,32 @@
+service: s3sync
+
+# after it is created update the environment properties and manually execute
+frameworkVersion: ">=1.2.0 < 2.0.0"
+
+# used for readability
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
+
+environment:
+  SOURCE_BUCKET: SOURCE_BUCKET
+  TARGET_BUCKLET: TARGET_BUCKET  
+
+provider:
+  name: aws
+  runtime: python3.6
+  region: us-west-2
+
+functions:
+  simple:
+    handler: handler.handle_service
+    tags:
+      created: s3sync project in aws repo
+
+    #events:
+
+
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
