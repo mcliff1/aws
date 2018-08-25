@@ -8,20 +8,29 @@ custom:
   stage: ${opt:stage, self:provider.stage}
   region: ${opt:region, self:provider.region}
 
-environment:
-  SOURCE_BUCKET: SOURCE_BUCKET
-  TARGET_BUCKLET: TARGET_BUCKET  
 
 provider:
   name: aws
   runtime: python3.6
   region: us-west-2
 
+
+# run pip install awscli to get it initially loaded
+# in my case I copied it from the already installed version (1.15.9)
+# these dont seem to matter if they are here
+# pip3 install awscli -t .
+package:
+  include:
+    - awscli/**
+
 functions:
   simple:
     handler: handler.handle_service
     tags:
       created: s3sync project in aws repo
+    environment:
+      SOURCE_BUCKET: SOURCE_BUCKET
+      TARGET_BUCKET: TARGET_BUCKET
 
     #events:
 

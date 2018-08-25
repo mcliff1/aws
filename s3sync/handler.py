@@ -53,7 +53,7 @@ def handle_service(event, context):
     target = os.environ['TARGET_BUCKET']
 
     logging.info("bucket properties source: %s, target: %s", source, target)
-    aws_cli('s3', 'sync', source, target, '--delete')
+    aws_cli(['s3', 'sync', source, target, '--delete'])
     #operation = event['httpMethod']
     #data = event['queryStringParameters'] if operation == 'GET' else json.loads(event['body'])
 
