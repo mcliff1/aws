@@ -14,7 +14,7 @@
   "author": "Ryan Scott Brown (and Matt Cliff)",
   "dependencies": {
     "graphql": "~0.9.1",
-    "lodash": "~4.16.4",
+    "lodash": "~>4.17.5",
     "uuid": "~3.0.1"
   },
   "devDependencies": {
