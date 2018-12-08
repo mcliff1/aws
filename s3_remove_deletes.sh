@@ -7,7 +7,7 @@ BUCKET=$1
 PREFIX=$2
 
 
-if [ "x$PREFIX" == "x"]; then
+if [ "x$PREFIX" != "x" ]; then
   PREFIX_PARAM="--prefix $PREFIX"
 fi
 
@@ -16,7 +16,8 @@ aws s3api list-object-versions --bucket $BUCKET $PREFIX_PARAM --output text | \
 grep "DELETEMARKERS" | \
 while read OBJ
 do
-  KEY=$( echo $OBJ| awk '{print $3}')
-  VERSION_ID=$( echo $OBJ | awk '{print $5}')
-  aws s3api delete-object --bucket $BUCKET --key $KEY --version_id $VERSION_ID
+  KEY=$( awk 'BEGIN{FS="\t"}{print $3}' <<< $OBJ )
+  VERSION_ID=$( awk 'BEGIN{FS="\t"}{print $5}' <<< $OBJ )
+  #VERSION_ID=$( echo $OBJ | awk '{print $5}')
+  aws s3api delete-object --bucket $BUCKET --key "$KEY" --version-id $VERSION_ID
 done
