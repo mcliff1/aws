@@ -1,6 +1,9 @@
 # AWS Resources
 Collection of Amazon Web Services Cloud resources and Utilities
 
+Utilities I could use
+* script that ensured an S3 bucket is created with the given name and prefix - to use in SAM based scripts that require a S3 bucket
+
 ### Contents
 * [Cloud Formation](#Cloud_Formation)
 * [VPC](#vpc)
@@ -46,7 +49,7 @@ The <i>cfn-ec2workstation.json</i> Cloud Formation template will build out a Ser
 <table width="100%">
 <tr><th><a href="https://github.com/mcliff1/aws/blob/master/vpc.json">vpc.json</a></th></tr>
 <tr><td>
-The *vpc.json* Cloud Formation template will build out a VPC with private and public subnets. This provides outputs for subnet and security information that other scripts may leverage. This provides the basis for other templates. 
+The *vpc.json* Cloud Formation template will build out a VPC with private and public subnets. This provides outputs for subnet and security information that other scripts may leverage. This provides the basis for other templates.
 
 <h6>Create Details</h6>
 <h6>Parameters</h6>
