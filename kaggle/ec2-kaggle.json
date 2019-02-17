@@ -12,11 +12,11 @@
 			"Type" : "AWS::EC2::KeyPair::KeyName"
 		},
 		"VPC" : {
-			"Description" : "VPC to place instance in",
+			"Description" : "VPC to place instance in (required to create SG)",
 			"Type" : "AWS::EC2::VPC::Id"
 		},
 		"SubnetId" : {
-			"Description" : "Subnet to place instance in (must be in selected VPC)",
+			"Description" : "I think this can be removed",
 			"Type" : "AWS::EC2::Subnet::Id"
 		},
 		"DomainName" : {
@@ -90,11 +90,10 @@
 			"Ec2SecurityGroup": {
 				"Type" : "AWS::EC2::SecurityGroup",
 				"Properties" : {
-					"GroupDescription" : "Allows access to ports 22, 3000(REACT), 8000" ,
+					"GroupDescription" : "Allows access to ports 22 and 8888" ,
 					"SecurityGroupIngress" : [
 						{ "Description" : "Access to SSH", "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
-						{ "Description" : "REACT dev port", "IpProtocol" : "tcp", "FromPort" : "3000", "ToPort" : "3000", "CidrIp" : "0.0.0.0/0" },
-						{ "Description" : "http test port", "IpProtocol" : "tcp", "FromPort" : "8000", "ToPort" : "8000", "CidrIp" : "0.0.0.0/0" }
+						{ "Description" : "http test port", "IpProtocol" : "tcp", "FromPort" : "8888", "ToPort" : "8888", "CidrIp" : "0.0.0.0/0" }
 					],
 					"VpcId" : {"Ref": "VPC"},
 					"Tags" : [
@@ -120,7 +119,59 @@
 					]
 				}
 
-			}
+			},
+
+
+
+
+
+			"LaunchTemplate" : {
+				"Type" : "AWS::EC2::LaunchTemplate",
+				"Properties" : {
+					"LaunchTemplateName" : {"Fn::Join":["-", [{"Ref":"AWS::StackName"}, "lt"]]},
+					"LaunchTemplateData" : {
+						"KeyName" : {"Ref" : "Ec2KeyPair"},
+						"ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
+						"SecurityGroupIds" : [
+							{ "Fn::GetAtt" : ["Ec2SecurityGroup", "GroupId"] }
+						],
+						"TagSpecifications" : [
+							{
+								"ResourceType" : "instance",
+								"Tags" : [
+									{ "Key" : "Name", "Value" : {"Fn::Join": ["-", [{"Ref": "AWS::StackName"}, "LaunchTemplate"]]}},
+									{ "Key" : "Project", "Value" : {"Ref": "Project"} }
+								]
+							}
+						],
+						"BlockDeviceMappings": [
+							{
+								"DeviceName": "/dev/xvda",
+								"Ebs": {
+									"VolumeSize": "32",
+									"VolumeType":"gp2"
+								}
+							}
+						],
+
+						"UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n",[
+								"#!/bin/bash",
+								"yum update -y",
+								"yum install -y git docker tmux jq",
+								"curl https://bootstrap.pypa.io/get-pip.py | /usr/bin/python2.7",
+								"curl https://rpm.nodesource.com/setup_8.x | bash -",
+								"yum install -y nodejs",
+								"pip install -q boto3",
+								"usermod -a -G docker ec2-user",
+								"service docker start",
+								"docker pull kaggle/python",
+								"date > bootstrap.log"]]}
+							}
+						}
+					}
+				}
+
+
 
 		},
 		"Mappings" : {
