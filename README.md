@@ -23,8 +23,7 @@ These templates are based natively in Cloud Formation, each on should have a cle
 <table width="100%">
 <tr><th><a href="#">ec2-slsworkstation.json</a></th></tr>
 <tr><td>
-The <i>cfn-ec2workstation.json</i> Cloud Formation template will build out a Serverless workstation with NodeJS, NPM, SLS, and REACT frameworks install.
-
+The <i>ec2-slsworkstation.json</i> Cloud Formation template will build out a Serverless workstation with NodeJS, NPM, SLS, and REACT frameworks install.
 
 <h6>Create Details</h6>
 <h6>Parameters</h6>
@@ -40,6 +39,25 @@ The <i>cfn-ec2workstation.json</i> Cloud Formation template will build out a Ser
 </table>
 
 
+
+#### Kaggle Workstation
+<table width="100%">
+<tr><th><a href="#">ec2-kaggle.json</a></th></tr>
+<tr><td>
+The <i>ec2-kaggle.json</i> Cloud Formation template will build out a workstation with Docker and the latest Kaggle image pulled.
+
+<h6>Create Details</h6>
+<h6>Parameters</h6>
+<ol>
+<li>myKeyPair</li>
+<li>myDomain (optional)</li>
+</ol>
+<h6>Outputs</h6>
+<h6>Public S3 Url</h6>
+<ol><li>https://s3.amazonaws.com/mcliff/cliffconsulting.com/</li></ol>
+
+</td></tr>
+</table>
 
 
 

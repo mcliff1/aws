@@ -1,0 +1,197 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	"Description" : "EC2 instance intended to run the Kaggle docker image",
+	"Parameters" : {
+		"Project" : {
+			"Description" : "Project Name",
+			"Type" : "String",
+			"Default" : "Kaggle Docker Workstation"
+		},
+		"Ec2KeyPair" : {
+			"Description" : "Amazon EC2 Key Pair",
+			"Type" : "AWS::EC2::KeyPair::KeyName"
+		},
+		"VPC" : {
+			"Description" : "VPC to place instance in",
+			"Type" : "AWS::EC2::VPC::Id"
+		},
+		"SubnetId" : {
+			"Description" : "Subnet to place instance in (must be in selected VPC)",
+			"Type" : "AWS::EC2::Subnet::Id"
+		},
+		"DomainName" : {
+			"Description" : "(optional) Domain to add",
+			"Type" : "String",
+			"Default" : "nodomainname"
+		},
+		"HostName" : {
+			"Description" : "(optional) Host to add",
+			"Type" : "String",
+			"Default" : "kaggle"
+		},
+		"NetworkAccessIP" : {
+			"Description": "Source that has SSH access to the bastion host. (i.e. 50.32.108.38/32)",
+			"Type": "String",
+			"MinLength": "9",
+			"MaxLength": "18",
+			"Default": "0.0.0.0/0",
+			"AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+			"ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x."
+		}
+	},
+	"Conditions" : {
+		"CreateDnsResources" : {"Fn::Not" : [{ "Fn::Equals" : [{"Ref" : "DomainName"}, "nodomainname"] }] }
+	},
+	"Resources" : {
+		"EC2Instance": {
+			"Type" : "AWS::EC2::Instance",
+			"DependsOn": "Ec2SecurityGroup",
+			"Properties" : {
+				"ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
+				"KeyName" : { "Ref" : "Ec2KeyPair" },
+				"InstanceType" : "t2.micro",
+				"BlockDeviceMappings": [
+					{
+						"DeviceName": "/dev/xvda",
+						"Ebs": {
+							"VolumeSize": "40",
+							"VolumeType":"gp2"
+						}
+					}
+				],
+				"NetworkInterfaces": [
+					{
+					"GroupSet" : [ {"Ref": "Ec2SecurityGroup"} ],
+					"AssociatePublicIpAddress": true,
+					"DeviceIndex" : "0",
+					"SubnetId" : { "Ref": "SubnetId" },
+					"DeleteOnTermination" :true
+					}
+				],
+				"Tags" : [
+						{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-ec2"]]}},
+						{ "Key" : "Project", "Value" : {"Ref": "Project"} }
+					],
+				"UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n",[
+						"#!/bin/bash",
+						"yum update -y",
+						"yum install -y git docker tmux jq",
+						"curl https://bootstrap.pypa.io/get-pip.py | /usr/bin/python2.7",
+						"curl https://rpm.nodesource.com/setup_8.x | bash -",
+						"yum install -y nodejs",
+						"pip install -q boto3",
+						"usermod -a -G docker ec2-user",
+						"service docker start",
+						"docker pull kaggle/python",
+						"date > bootstrap.log"]]}
+					}
+				}
+			},
+			"Ec2SecurityGroup": {
+				"Type" : "AWS::EC2::SecurityGroup",
+				"Properties" : {
+					"GroupDescription" : "Allows access to ports 22, 3000(REACT), 8000" ,
+					"SecurityGroupIngress" : [
+						{ "Description" : "Access to SSH", "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
+						{ "Description" : "REACT dev port", "IpProtocol" : "tcp", "FromPort" : "3000", "ToPort" : "3000", "CidrIp" : "0.0.0.0/0" },
+						{ "Description" : "http test port", "IpProtocol" : "tcp", "FromPort" : "8000", "ToPort" : "8000", "CidrIp" : "0.0.0.0/0" }
+					],
+					"VpcId" : {"Ref": "VPC"},
+					"Tags" : [
+						{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-SecurityGroup"]]}},
+						{ "Key" : "Project", "Value" : {"Ref": "Project"} }
+					]
+				}
+			},
+
+
+
+			"DnsRecord": {
+				"Type" : "AWS::Route53::RecordSet",
+				"Condition" : "CreateDnsResources",
+				"Properties" : {
+					"Comment" : "ec2-sls  workstation instance",
+					"Type" : "A",
+					"TTL" : "900",
+					"HostedZoneName" : {"Fn::Join": [ "", [{"Ref": "DomainName"}, "." ]]},
+					"Name" : {"Fn::Join": [ "", [{"Ref": "HostName"}, ".", {"Ref":"DomainName"}, "."]]},
+					"ResourceRecords" : [
+						{ "Fn::GetAtt" : ["EC2Instance", "PublicIp"] }
+					]
+				}
+
+			}
+
+		},
+		"Mappings" : {
+			"AWSRegionArch2AMI" : {
+				"us-east-1"        : {"HVM64" : "ami-97785bed"},
+				"us-west-2"        : {"HVM64" : "ami-f2d3638a"},
+				"us-west-1"        : {"HVM64" : "ami-824c4ee2"},
+				"eu-west-1"        : {"HVM64" : "ami-d834aba1"},
+				"eu-west-2"        : {"HVM64" : "ami-403e2524"},
+				"eu-west-3"        : {"HVM64" : "ami-8ee056f3"},
+				"eu-central-1"     : {"HVM64" : "ami-5652ce39"},
+				"ap-northeast-1"   : {"HVM64" : "ami-ceafcba8"},
+				"ap-northeast-2"   : {"HVM64" : "ami-863090e8"},
+				"ap-northeast-3"   : {"HVM64" : "ami-83444afe"},
+				"ap-southeast-1"   : {"HVM64" : "ami-68097514"},
+				"ap-southeast-2"   : {"HVM64" : "ami-942dd1f6"},
+				"ap-south-1"       : {"HVM64" : "ami-531a4c3c"},
+				"us-east-2"        : {"HVM64" : "ami-f63b1193"},
+				"ca-central-1"     : {"HVM64" : "ami-a954d1cd"},
+				"sa-east-1"        : {"HVM64" : "ami-84175ae8"},
+				"cn-north-1"       : {"HVM64" : "ami-cb19c4a6"},
+				"cn-northwest-1"   : {"HVM64" : "ami-3e60745c"}
+			}
+		},
+		"Metadata": {
+			"AWS::CloudFormation::Interface" : {
+				"ParameterGroups" : [
+					{
+						"Label" : { "default" : "Project Information"},
+						"Parameters" : [ "Project" ]
+					},
+					{
+						"Label" : { "default" : "Network Placement"},
+						"Parameters" : [
+							"Ec2KeyPair",
+							"VPC",
+							"SubnetId",
+							"NetworkAccessIP"
+						]
+					},
+					{
+						"Label" : { "default" : "DNS Configuration"},
+						"Parameters" : [
+							"HostName",
+							"DomainName"
+						]
+					}
+				],
+				"ParameterLabels" : {
+					"Ec2KeyPair": { "default" : "Key Pair to allow SSH access" },
+					"VPC": { "default" : "VPC to place instance in" },
+					"SubnetId": { "default" : "Subnet to place instance" },
+					"NetworkAccessIP": { "default" : "Network with SSH access" },
+					"DomainName": { "default" : "Domainname to use (optional)" },
+					"HostName": { "default" : "Hostname to use (optional)" }
+				}
+			}
+		},
+		"Outputs": {
+			"PublicIp" : {
+				"Description" : "Public IP Address",
+				"Value" : { "Fn::GetAtt" : ["EC2Instance", "PublicIp"] },
+				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicIp"}}
+			},
+			"PublicDns" : {
+				"Description" : "Public IP Address",
+				"Value" : { "Ref" : "DnsRecord" },
+				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicDns"}},
+				"Condition" : "CreateDnsResources"
+			}
+
+		}
+
+	}
