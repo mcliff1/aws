@@ -99,7 +99,10 @@
 										"Action" : [
 											"ec2:AttachVolume"
 										],
-										"Resource" : {"Fn::Join": ["", ["arn:aws:ec2:", {"Ref": "AWS::Region"},":", {"Ref":"AWS::AccountId"}, ":instance/*"]]},
+										"Resource" : [
+											{"Fn::Join": ["", ["arn:aws:ec2:", {"Ref": "AWS::Region"},":", {"Ref":"AWS::AccountId"}, ":instance/*"]]},
+											{"Fn::Join": ["", ["arn:aws:ec2:", {"Ref": "AWS::Region"},":", {"Ref":"AWS::AccountId"}, ":volume/", {"Ref": "NotebookVolume"}]]}
+										],
 										"Effect" : "Allow"
 									}
 
