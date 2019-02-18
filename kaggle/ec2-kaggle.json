@@ -43,133 +43,85 @@
 		"CreateDnsResources" : {"Fn::Not" : [{ "Fn::Equals" : [{"Ref" : "DomainName"}, "nodomainname"] }] }
 	},
 	"Resources" : {
-		"EC2Instance": {
-			"Type" : "AWS::EC2::Instance",
-			"DependsOn": "Ec2SecurityGroup",
+
+		"Ec2SecurityGroup": {
+			"Type" : "AWS::EC2::SecurityGroup",
 			"Properties" : {
-				"ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
-				"KeyName" : { "Ref" : "Ec2KeyPair" },
-				"InstanceType" : "t2.micro",
-				"BlockDeviceMappings": [
-					{
-						"DeviceName": "/dev/xvda",
-						"Ebs": {
-							"VolumeSize": "40",
-							"VolumeType":"gp2"
-						}
-					}
+				"GroupDescription" : "Allows access to ports 22 and 8888" ,
+				"SecurityGroupIngress" : [
+					{ "Description" : "Access to SSH", "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
+					{ "Description" : "http test port", "IpProtocol" : "tcp", "FromPort" : "8888", "ToPort" : "8888", "CidrIp" : "0.0.0.0/0" }
 				],
-				"NetworkInterfaces": [
-					{
-					"GroupSet" : [ {"Ref": "Ec2SecurityGroup"} ],
-					"AssociatePublicIpAddress": true,
-					"DeviceIndex" : "0",
-					"SubnetId" : { "Ref": "SubnetId" },
-					"DeleteOnTermination" :true
-					}
-				],
+				"VpcId" : {"Ref": "VPC"},
 				"Tags" : [
-						{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-ec2"]]}},
-						{ "Key" : "Project", "Value" : {"Ref": "Project"} }
+					{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-SecurityGroup"]]}},
+					{ "Key" : "Project", "Value" : {"Ref": "Project"} }
+				]
+			}
+		},
+
+
+		"NotebookVolume": {
+			"Type": "AWS::EC2::Volume",
+			"Properties":{
+				"AvailabilityZone": {"Fn::Join": ["", [{"Ref": "AWS::Region"}, "a"]]},
+				"Size": 32,
+				"VolumeType": "gp2",
+				"Tags": [
+					{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-NotebookVolume"]]}},
+					{ "Key" : "Project", "Value" : {"Ref": "Project"} }
+				]
+			}
+		},
+
+
+
+		"LaunchTemplate" : {
+			"Type" : "AWS::EC2::LaunchTemplate",
+			"Properties" : {
+				"LaunchTemplateName" : {"Fn::Join":["-", [{"Ref":"AWS::StackName"}, "lt"]]},
+				"LaunchTemplateData" : {
+					"KeyName" : {"Ref" : "Ec2KeyPair"},
+					"ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
+					"SecurityGroupIds" : [
+						{ "Fn::GetAtt" : ["Ec2SecurityGroup", "GroupId"] }
 					],
-				"UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n",[
-						"#!/bin/bash",
-						"yum update -y",
-						"yum install -y git docker tmux jq",
-						"curl https://bootstrap.pypa.io/get-pip.py | /usr/bin/python2.7",
-						"curl https://rpm.nodesource.com/setup_8.x | bash -",
-						"yum install -y nodejs",
-						"pip install -q boto3",
-						"usermod -a -G docker ec2-user",
-						"service docker start",
-						"docker pull kaggle/python",
-						"date > bootstrap.log"]]}
-					}
-				}
-			},
-			"Ec2SecurityGroup": {
-				"Type" : "AWS::EC2::SecurityGroup",
-				"Properties" : {
-					"GroupDescription" : "Allows access to ports 22 and 8888" ,
-					"SecurityGroupIngress" : [
-						{ "Description" : "Access to SSH", "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
-						{ "Description" : "http test port", "IpProtocol" : "tcp", "FromPort" : "8888", "ToPort" : "8888", "CidrIp" : "0.0.0.0/0" }
+					"TagSpecifications" : [
+						{
+							"ResourceType" : "instance",
+							"Tags" : [
+								{ "Key" : "Name", "Value" : {"Fn::Join": ["-", [{"Ref": "AWS::StackName"}, "LaunchTemplate"]]}},
+								{ "Key" : "Project", "Value" : {"Ref": "Project"} }
+							]
+						}
 					],
-					"VpcId" : {"Ref": "VPC"},
-					"Tags" : [
-						{ "Key" : "Name", "Value" : {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-SecurityGroup"]]}},
-						{ "Key" : "Project", "Value" : {"Ref": "Project"} }
-					]
-				}
-			},
-
-
-
-			"DnsRecord": {
-				"Type" : "AWS::Route53::RecordSet",
-				"Condition" : "CreateDnsResources",
-				"Properties" : {
-					"Comment" : "ec2-sls  workstation instance",
-					"Type" : "A",
-					"TTL" : "900",
-					"HostedZoneName" : {"Fn::Join": [ "", [{"Ref": "DomainName"}, "." ]]},
-					"Name" : {"Fn::Join": [ "", [{"Ref": "HostName"}, ".", {"Ref":"DomainName"}, "."]]},
-					"ResourceRecords" : [
-						{ "Fn::GetAtt" : ["EC2Instance", "PublicIp"] }
-					]
-				}
-
-			},
-
-
-
-
-
-			"LaunchTemplate" : {
-				"Type" : "AWS::EC2::LaunchTemplate",
-				"Properties" : {
-					"LaunchTemplateName" : {"Fn::Join":["-", [{"Ref":"AWS::StackName"}, "lt"]]},
-					"LaunchTemplateData" : {
-						"KeyName" : {"Ref" : "Ec2KeyPair"},
-						"ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
-						"SecurityGroupIds" : [
-							{ "Fn::GetAtt" : ["Ec2SecurityGroup", "GroupId"] }
-						],
-						"TagSpecifications" : [
-							{
-								"ResourceType" : "instance",
-								"Tags" : [
-									{ "Key" : "Name", "Value" : {"Fn::Join": ["-", [{"Ref": "AWS::StackName"}, "LaunchTemplate"]]}},
-									{ "Key" : "Project", "Value" : {"Ref": "Project"} }
-								]
+					"BlockDeviceMappings": [
+						{
+							"DeviceName": "/dev/xvda",
+							"Ebs": {
+								"VolumeSize": "32",
+								"VolumeType":"gp2"
 							}
-						],
-						"BlockDeviceMappings": [
-							{
-								"DeviceName": "/dev/xvda",
-								"Ebs": {
-									"VolumeSize": "32",
-									"VolumeType":"gp2"
-								}
-							}
-						],
+						}
+					],
 
-						"UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n",[
-								"#!/bin/bash",
-								"yum update -y",
-								"yum install -y git docker tmux jq",
-								"curl https://bootstrap.pypa.io/get-pip.py | /usr/bin/python2.7",
-								"curl https://rpm.nodesource.com/setup_8.x | bash -",
-								"yum install -y nodejs",
-								"pip install -q boto3",
-								"usermod -a -G docker ec2-user",
-								"service docker start",
-								"docker pull kaggle/python",
-								"date > bootstrap.log"]]}
-							}
+					"UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n",[
+							"#!/bin/bash",
+							"yum update -y",
+							"yum install -y git docker tmux jq",
+							"curl https://bootstrap.pypa.io/get-pip.py | /usr/bin/python2.7",
+							"curl https://rpm.nodesource.com/setup_8.x | bash -",
+							"yum install -y nodejs",
+							"pip install -q boto3",
+							"usermod -a -G docker ec2-user",
+							"service docker start",
+							"docker pull kaggle/python",
+							"docker run -v /home/ec2-user:/tmp/working -w=/tmp/working -p 8888:8888 --rm -it kaggle/python jupyter notebook --no-browser --ip=\"0.0.0.0\" --allow-root --notebook-dir=/tmp/working --NotebookApp.token=\"\"",
+							"date > bootstrap.log"]]}
 						}
 					}
 				}
+			}
 
 
 
@@ -231,17 +183,6 @@
 			}
 		},
 		"Outputs": {
-			"PublicIp" : {
-				"Description" : "Public IP Address",
-				"Value" : { "Fn::GetAtt" : ["EC2Instance", "PublicIp"] },
-				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicIp"}}
-			},
-			"PublicDns" : {
-				"Description" : "Public IP Address",
-				"Value" : { "Ref" : "DnsRecord" },
-				"Export" : {"Name" : {"Fn::Sub": "${AWS::StackName}-PublicDns"}},
-				"Condition" : "CreateDnsResources"
-			}
 
 		}
 

@@ -9,6 +9,7 @@ We have
   - creates volume
   - creates launch template for generic AMI to build environment with kaggle python docker image (mounts the volume)
 
+Reference for the [Kaggle/Python](https://github.com/Kaggle/docker-python) Docker ImageId
 
 
   #### Kaggle Project Stack
