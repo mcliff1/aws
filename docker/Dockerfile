@@ -32,6 +32,11 @@ USER nonroot
 ENV PATH $PATH:$HOME/.local/bin
 WORKDIR /nonroot
 
+COPY bootstrap.sh bootstrap.sh
+
+#ENTRYPINT [ "localhost" ]
+CMD [ "./bootstrap.sh" ]
+
 # this is based on alpine:3.8
 # alpine is NOT working because base64 -w option in the nauth script
 #FROM node:8.12.0-stretch
