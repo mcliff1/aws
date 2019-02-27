@@ -12,6 +12,13 @@ Assume this is built as 'mcliff/aws'
 
 `docker run --rm mcliff/aws:1.0.0`
 
+
+To run locally without anything
+`docker build -t local .`
+`docker run local`
+
+
+
 ## Steps to Build
 
 This was built on an EC2 instance set up that has docker installed.

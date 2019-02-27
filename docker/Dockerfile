@@ -18,6 +18,7 @@ RUN \
 RUN \
     pip install wheel && \
     pip install setuptools && \
+    pip install aws-sam-cli && \
     pip install awscli==$AWSCLI_VERSION
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
