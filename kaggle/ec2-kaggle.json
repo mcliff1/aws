@@ -170,9 +170,9 @@
 							{"Fn::Join": ["", ["aws --region $REGION ec2 attach-volume --volume-id ", {"Ref": "NotebookVolume"}," --device /dev/sdf --instance-id $INSTANCE"]]},
 							"service docker start",
 							"docker pull kaggle/python",
-							"mkfs /dev/sdf",
+							"if ! blkid /dev/sdf; then mkfs /dev/sdf; fi",
 							"mount /dev/sdf /mnt",
-							"docker run -v /mnt:/tmp/working -w=/tmp/working -p 8888:8888 --rm -it kaggle/python jupyter notebook --no-browser --ip=\"0.0.0.0\" --allow-root --notebook-dir=/tmp/working --NotebookApp.token=\"\"",
+							"docker run -v /mnt:/tmp/working -w=/tmp/working -p 8888:8888 --rm kaggle/python jupyter notebook --no-browser --ip=\"0.0.0.0\" --allow-root --notebook-dir=/tmp/working --NotebookApp.token=\"\"",
 							"date > bootstrap.log"]]}
 						}
 					}
