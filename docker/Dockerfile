@@ -37,6 +37,7 @@ ENV PATH $PATH:$HOME/.local/bin
 WORKDIR /nonroot
 
 COPY bootstrap.sh /bootstrap.sh
+COPY ../cloudformation/template.yaml /template.yaml
 
 #ENTRYPINT [ "localhost" ]
 CMD [ "/bootstrap.sh" ]
