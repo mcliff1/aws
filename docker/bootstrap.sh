@@ -1,6 +1,7 @@
 #!/bin/bash
 date
-ls
+ls -a
+
 # if the bucket exists list it, else make it
 aws s3 ls $CI_BUCKET > /dev/null 2> /dev/null || aws s3 mb s3://$CI_BUCKET
 aws sts get-caller-identity
