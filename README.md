@@ -4,6 +4,11 @@ Collection of Amazon Web Services Cloud resources and Utilities
 Utilities I could use
 * script that ensured an S3 bucket is created with the given name and prefix - to use in SAM based scripts that require a S3 bucket
 
+
+Feb 27, 2019;  repurpose this repository;   it will contain resources that can launch various AWS stacks and implementations;   it will be 100% self-contained with the caveat that Docker images have been built and deployed to Docker Hub (using the Docker resources in this git) to push the other implementations.
+
+
+
 ### Contents
 * [Cloud Formation](#Cloud_Formation)
 * [VPC](#vpc)
