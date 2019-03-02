@@ -37,7 +37,6 @@ ENV PATH $PATH:$HOME/.local/bin
 WORKDIR /nonroot
 
 COPY bootstrap.sh /bootstrap.sh
-#COPY ../cloudformation/template.yaml /template.yaml
 COPY template.yaml /nonroot/template.yaml
 
 #ENTRYPINT [ "localhost" ]
@@ -48,7 +47,6 @@ CMD [ "/bootstrap.sh" ]
 # alpine is NOT working because base64 -w option in the nauth script
 #FROM node:8.12.0-stretch
 #
-#LABEL maintainer "Matt Cliff <matt.cliff@nordstrom.com>"
 #
 #ENV AWSCLI_VERSION 1.16.33
 ##ENV HOME /tmp
@@ -65,15 +63,14 @@ CMD [ "/bootstrap.sh" ]
 #        less
 
 # install python modules
-#RUN pip install --upgrade awscli==$AWSCLI_VERSION s3cmd python-magic 
+#RUN pip install --upgrade awscli==$AWSCLI_VERSION s3cmd python-magic
 #
 #
 #RUN npm install -g serverless && \
-#    npm install -g serverless-offline 
+#    npm install -g serverless-offline
 ##    npm install -g yarn
 #
 #RUN chmod 777 /
 #RUN mkdir /aws
 #WORKDIR /aws
 #CMD [ "sh" ]
-

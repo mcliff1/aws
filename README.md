@@ -5,14 +5,44 @@ Utilities I could use
 * script that ensured an S3 bucket is created with the given name and prefix - to use in SAM based scripts that require a S3 bucket
 
 
-Feb 27, 2019;  repurpose this repository;   it will contain resources that can launch various AWS stacks and implementations;   it will be 100% self-contained with the caveat that Docker images have been built and deployed to Docker Hub (using the Docker resources in this git) to push the other implementations.
+Feb 27, 2019;  repurpose this repository;   it will contain resources that can launch various AWS stacks and implementations;   it will be 100% self-contained with the caveat that Docker images have been built and deployed to Docker Hub (using the Docker resources in this git) to push the other implementations.  The Dockerfile is a helper to build the stack as long as there is an AWS credentials available to the container.
 
 
 
 ### Contents
-* [Cloud Formation](#Cloud_Formation)
-* [VPC](#vpc)
-* [References](#references)
+- [Build Image](#Build_Image)
+- [Cloud Formation](#Cloud_Formation)
+- [VPC](#vpc)
+- [References](#references)
+
+## Build Image
+
+This image was designed to be able to bootstrap this GIT into an AWS runtime
+
+
+
+## Usage
+
+Assume this is built as 'mcliff/aws'
+
+`docker run --rm mcliff/aws:1.0.0`
+
+
+To run locally without anything
+`docker build -t local .`
+`docker run local`
+
+
+
+## Steps to Build
+
+This was built on an EC2 instance set up that has docker installed.
+
+- Build the image (and tag) `docker build -t mcliff1/aws .`
+- `docker build -t mcliff/aws .`
+
+These steps created a **latest** tag;  repeated with `:0.0.1` appended to the end for a **v0.0.1** tag as well, that is what other build scripts should reference
+
 
 ## Cloud Formation
 
@@ -339,3 +369,5 @@ Start flushing out changes to the REACT side of the app
 [back to top](#contents)
 
 * [AWS Bastion Host](https://docs.aws.amazon.com/quickstart/latest/linux-bastion/architecture.html)
+
+[docker entrypoint vs cmd](https://www.ctl.io/developers/blog/post/dockerfile-entrypoint-vs-cmd/)
