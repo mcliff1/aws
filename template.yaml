@@ -78,23 +78,15 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: Authorizer function for API
-      CodeUri: ./src
+      CodeUri: ./lambda/auth
       Handler: auth.handler
 
-  MessengerService:
+  ConsoleService:
     Type:  AWS::Serverless::Function
     Properties:
-      Description: Function to support Messenger Services (create, update, delete)
+      Description: Provides GET support for console UI
       Handler: messenger.handler
-      CodeUri: ./src
-      Policies:
-        - AmazonDynamoDBReadOnlyAccess
-        - Version: '2012-10-17' # inline policy
-          Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:*
-              Resource: !GetAtt MessengerTable.Arn
+      CodeUri: ./lambda/console
       Events:
         GetService:
           Type: Api

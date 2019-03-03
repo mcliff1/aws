@@ -32,14 +32,16 @@ RUN groupadd -r nonroot -g 59417 && \
     useradd -r -g nonroot -m  -d /nonroot -u 59417 nonroot && \
     chmod -R 777 /nonroot
 
+COPY bootstrap.sh /bootstrap.sh
+COPY template.yaml /nonroot/template.yaml
+RUN chown nonroot:nonroot /bootstrap.sh /nonroot/template.yaml && chmod 755 /bootstrap.sh
+
 USER nonroot
 ENV PATH $PATH:$HOME/.local/bin
 WORKDIR /nonroot
 
-COPY bootstrap.sh /bootstrap.sh
-COPY template.yaml /nonroot/template.yaml
 
-#ENTRYPINT [ "localhost" ]
+#ENTRYPOINT [ "localhost" ]
 CMD [ "/bootstrap.sh" ]
 #CMD [ "sh", "-c", "/bootstrap.sh ${STACK_NAME} ${CI_BUCKET}" ]
-:
+
