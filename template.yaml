@@ -26,18 +26,6 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
-      Auth:
-        DefaultAuthorizer: MyLambdaRequestAuthorizer
-        Authorizers:
-          MyLambdaRequestAuthorizer:
-            FunctionPayloadType: REQUEST
-            FunctionArn: !GetAtt ApiAuthService.Arn
-            # FunctionInvokeRole: !Ref MyRole
-            Identity:
-              Headers:
-               - x-api-key
-              # ReauthorizeEvery: 100 # seconds
-
 
   ServiceApiDomain:
     Type : AWS::ApiGateway::DomainName
@@ -74,18 +62,11 @@ Resources:
         DNSName: {"Fn::GetAtt": ["ServiceApiDomain", "RegionalDomainName"]}
 
 
-  ApiAuthService:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Authorizer function for API
-      CodeUri: ./lambda/auth
-      Handler: auth.handler
-
   ConsoleService:
     Type:  AWS::Serverless::Function
     Properties:
       Description: Provides GET support for console UI
-      Handler: messenger.handler
+      Handler: index.handler
       CodeUri: ./lambda/console
       Events:
         GetService:
@@ -102,50 +83,9 @@ Resources:
             RestApiId: !Ref ApplicationApi
 
 
-  SendService:
-    Type:  AWS::Serverless::Function
-    Properties:
-      Description: Method to support API reciept of Send Request
-      Handler: send.handler
-      CodeUri: ./src
-      Environment:
-        Variables:
-          SNS_TOPIC: !Ref NewMessageTopic
-      Policies:
-        - AmazonDynamoDBReadOnlyAccess
-        - !Ref NordstromIamPolicy
-        - Version: '2012-10-17' # inline policy
-          Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:*
-              Resource: !GetAtt MessageTable.Arn
-            - Effect: Allow
-              Action:
-                - sns:Publish
-              Resource: !Ref NewMessageTopic
-      Events:
-        SendMessage:
-          Type: Api
-          Properties:
-            Path: /messenger/{serviceId}/send
-            Method: post
-            RestApiId: !Ref ApplicationApi
-
-
   NewMessageTopic:
     Type: AWS::SNS::Topic
 
-  MessengerTable:
-    Type: AWS::Serverless::SimpleTable
-    PrimaryKey:
-      Name: id
-      Type: String
-    ProvisionedThroughput:
-      ReadCapacityUnits: 1
-      WriteCapacityUnits: 1
-    Tags:
-      Name: table of senders for this environment
 
 Outputs:
   ApiURL:

@@ -34,7 +34,8 @@ RUN groupadd -r nonroot -g 59417 && \
 
 COPY bootstrap.sh /bootstrap.sh
 COPY template.yaml /nonroot/template.yaml
-RUN chown nonroot:nonroot /bootstrap.sh /nonroot/template.yaml && chmod 755 /bootstrap.sh
+COPY lambda /nonroot/lambda
+RUN chown -R nonroot:nonroot /bootstrap.sh /nonroot/template.yaml /nonroot/lambda && chmod 755 /bootstrap.sh
 
 USER nonroot
 ENV PATH $PATH:$HOME/.local/bin
