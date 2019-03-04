@@ -8,9 +8,6 @@ LABEL maintainer "Matt Cliff <matt@denvercliffs.com>"
 
 ENV AWSCLI_VERSION "1.16.33"
 
-ENV STACK_NAME awsmyconsole
-ENV CI_BUCKET tempawsbuild
-
 RUN \
     apt-get update && \
     apt-get install -y apt-utils less gnupg zip curl python-pip
@@ -40,6 +37,9 @@ RUN chown -R nonroot:nonroot /bootstrap.sh /nonroot/template.yaml /nonroot/lambd
 USER nonroot
 ENV PATH $PATH:$HOME/.local/bin
 WORKDIR /nonroot
+
+ENV STACK_NAME awsmyconsole
+ENV SAM_BUCKET tempsambuild
 
 
 #ENTRYPOINT [ "localhost" ]

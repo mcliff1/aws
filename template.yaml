@@ -27,39 +27,39 @@ Resources:
     Properties:
       StageName: Prod
 
-  ServiceApiDomain:
-    Type : AWS::ApiGateway::DomainName
-    Properties:
-      DomainName: {"Fn::Join": [".", [
-          {"Ref": "Hostname"},
-          "domain.com"
-        ]]}
-      RegionalCertificateArn: {"Ref": "SomeParamater"}
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
+#  ServiceApiDomain:
+#    Type : AWS::ApiGateway::DomainName
+#    Properties:
+#      DomainName: {"Fn::Join": [".", [
+#          {"Ref": "Hostname"},
+#          "domain.com"
+#        ]]}
+#      RegionalCertificateArn: {"Ref": "SomeParamater"}
+#      EndpointConfiguration:
+#        Types:
+#          - REGIONAL
 
-  ServiceApiMapping:
-    Type: AWS::ApiGateway::BasePathMapping
-    Properties:
-      DomainName: {"Ref": "ServiceApiDomain"}
-      RestApiId: {"Ref": "ApplicationApi"}
-      # Stage: Prod
+#  ServiceApiMapping:
+#    Type: AWS::ApiGateway::BasePathMapping
+#    Properties:
+#      DomainName: {"Ref": "ServiceApiDomain"}
+#      RestApiId: {"Ref": "ApplicationApi"}
+#      # Stage: Prod
 
 
-  DnsRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Comment: "URL for MyConsole Service (SAM)"
-      Type: A
-      HostedZoneName: "domain.com."
-      Name: {"Fn::Join": ["", [
-        {"Ref": "Hostname"},
-           ".",
-           "domain.com", "."]]}
-      AliasTarget:
-        HostedZoneId: Z2OJLYMUO9EFXC
-        DNSName: {"Fn::GetAtt": ["ServiceApiDomain", "RegionalDomainName"]}
+#  DnsRecord:
+#    Type: AWS::Route53::RecordSet
+#    Properties:
+#      Comment: "URL for MyConsole Service (SAM)"
+#      Type: A
+#      HostedZoneName: "domain.com."
+#      Name: {"Fn::Join": ["", [
+#        {"Ref": "Hostname"},
+#           ".",
+#           "domain.com", "."]]}
+#      AliasTarget:
+#        HostedZoneId: Z2OJLYMUO9EFXC
+#        DNSName: {"Fn::GetAtt": ["ServiceApiDomain", "RegionalDomainName"]}
 
 
   ConsoleService:
