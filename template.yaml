@@ -26,75 +26,48 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
-      Auth:
-        DefaultAuthorizer: MyLambdaRequestAuthorizer
-        Authorizers:
-          MyLambdaRequestAuthorizer:
-            FunctionPayloadType: REQUEST
-            FunctionArn: !GetAtt ApiAuthService.Arn
-            # FunctionInvokeRole: !Ref MyRole
-            Identity:
-              Headers:
-               - x-api-key
-              # ReauthorizeEvery: 100 # seconds
+
+#  ServiceApiDomain:
+#    Type : AWS::ApiGateway::DomainName
+#    Properties:
+#      DomainName: {"Fn::Join": [".", [
+#          {"Ref": "Hostname"},
+#          "domain.com"
+#        ]]}
+#      RegionalCertificateArn: {"Ref": "SomeParamater"}
+#      EndpointConfiguration:
+#        Types:
+#          - REGIONAL
+
+#  ServiceApiMapping:
+#    Type: AWS::ApiGateway::BasePathMapping
+#    Properties:
+#      DomainName: {"Ref": "ServiceApiDomain"}
+#      RestApiId: {"Ref": "ApplicationApi"}
+#      # Stage: Prod
 
 
-  ServiceApiDomain:
-    Type : AWS::ApiGateway::DomainName
-    Properties:
-      DomainName: {"Fn::Join": [".", [
-          {"Ref": "Hostname"},
-          "domain.com"
-        ]]}
-      RegionalCertificateArn: {"Ref": "SomeParamater"}
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
-
-  ServiceApiMapping:
-    Type: AWS::ApiGateway::BasePathMapping
-    Properties:
-      DomainName: {"Ref": "ServiceApiDomain"}
-      RestApiId: {"Ref": "ApplicationApi"}
-      # Stage: Prod
+#  DnsRecord:
+#    Type: AWS::Route53::RecordSet
+#    Properties:
+#      Comment: "URL for MyConsole Service (SAM)"
+#      Type: A
+#      HostedZoneName: "domain.com."
+#      Name: {"Fn::Join": ["", [
+#        {"Ref": "Hostname"},
+#           ".",
+#           "domain.com", "."]]}
+#      AliasTarget:
+#        HostedZoneId: Z2OJLYMUO9EFXC
+#        DNSName: {"Fn::GetAtt": ["ServiceApiDomain", "RegionalDomainName"]}
 
 
-  DnsRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Comment: "URL for MyConsole Service (SAM)"
-      Type: A
-      HostedZoneName: "domain.com."
-      Name: {"Fn::Join": ["", [
-        {"Ref": "Hostname"},
-           ".",
-           "domain.com", "."]]}
-      AliasTarget:
-        HostedZoneId: Z2OJLYMUO9EFXC
-        DNSName: {"Fn::GetAtt": ["ServiceApiDomain", "RegionalDomainName"]}
-
-
-  ApiAuthService:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Authorizer function for API
-      CodeUri: ./src
-      Handler: auth.handler
-
-  MessengerService:
+  ConsoleService:
     Type:  AWS::Serverless::Function
     Properties:
-      Description: Function to support Messenger Services (create, update, delete)
-      Handler: messenger.handler
-      CodeUri: ./src
-      Policies:
-        - AmazonDynamoDBReadOnlyAccess
-        - Version: '2012-10-17' # inline policy
-          Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:*
-              Resource: !GetAtt MessengerTable.Arn
+      Description: Provides GET support for console UI
+      Handler: index.handler
+      CodeUri: ./lambda/console
       Events:
         GetService:
           Type: Api
@@ -110,50 +83,9 @@ Resources:
             RestApiId: !Ref ApplicationApi
 
 
-  SendService:
-    Type:  AWS::Serverless::Function
-    Properties:
-      Description: Method to support API reciept of Send Request
-      Handler: send.handler
-      CodeUri: ./src
-      Environment:
-        Variables:
-          SNS_TOPIC: !Ref NewMessageTopic
-      Policies:
-        - AmazonDynamoDBReadOnlyAccess
-        - !Ref NordstromIamPolicy
-        - Version: '2012-10-17' # inline policy
-          Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:*
-              Resource: !GetAtt MessageTable.Arn
-            - Effect: Allow
-              Action:
-                - sns:Publish
-              Resource: !Ref NewMessageTopic
-      Events:
-        SendMessage:
-          Type: Api
-          Properties:
-            Path: /messenger/{serviceId}/send
-            Method: post
-            RestApiId: !Ref ApplicationApi
-
-
   NewMessageTopic:
     Type: AWS::SNS::Topic
 
-  MessengerTable:
-    Type: AWS::Serverless::SimpleTable
-    PrimaryKey:
-      Name: id
-      Type: String
-    ProvisionedThroughput:
-      ReadCapacityUnits: 1
-      WriteCapacityUnits: 1
-    Tags:
-      Name: table of senders for this environment
 
 Outputs:
   ApiURL:
