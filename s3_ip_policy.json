@@ -1,6 +1,24 @@
 {
+    "Version": "2012-10-17",
+    "Id": "S3PolicyId1_use_on_public_bucket",
+    "Statement": [
+        {
+            "Sid": "IPDeny",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:*",
+            "Resource": "arn:aws:s3:::BUCKET_NAME/*",
+            "Condition": {
+                "NotIpAddress": {
+                    "aws:SourceIp": "127.0.0.1/32"
+                }
+            }
+        }
+    ]
+},
+{
   "Version": "2012-10-17",
-  "Id": "S3PolicyId1",
+  "Id": "S3PolicyId1_use_on_private_bucket",
   "Statement": [
     {
       "Sid": "IPAllow",
