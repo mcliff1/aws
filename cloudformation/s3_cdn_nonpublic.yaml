@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creates stack with S3 bucket and CDN for restricted share on the internet
+
+
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: Site Specific
+        Parameters:
+          - WebHostName
+          - BucketName
+          - TagName
+      - Label:
+          default: General
+        Parameters:
+          - DomainName
+          - CertARN
+          - IndexDocument
+          - ErrorDocument
+    ParameterLables:
+      BucketName:
+        default: Name of the S3 Bucket
+      TagName:
+        default: Value to put in the Name tag of key resources
+      IndexDocument:
+        default: Root default index document
+      ErrorDocument:
+        default: default error document
+      WebHostName:
+        default: HostName for Web
+      DomainName:
+        default: Domain Name (hosted name in R53)
+      CertARN:
+        default: ARN for SSL certificate (must be in us-east-1)
+
+Parameters:
+
+  BucketName:
+    Description: Name of the bucket to store resources in
+    Type: String
+    AllowedPAttern: "[a-z0-9-]+"
+    ConstraintDescription: bucket name must be lower case
+  TagName:
+    Description: Value to be placed in 'Name' tag
+    Type: String
+    Default: resources for static hosting
+  IndexDocument:
+    Description: Document to server as static index page
+    Type: String
+    Default: index.html
+  ErrorDocument:
+    Description: Document to server as static error page
+    Type: String
+    Default: index.html
+  WebHostName:
+    Description: Name for the host
+    Type: String
+  Domain Name:
+    Description: Name for the domain
+    Type: String
+  CertARN:
+    Description: Certificate ARN
+    Type: String
